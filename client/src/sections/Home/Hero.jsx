@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 
+import { ShoppingBag } from "lucide-react";
+
 const heroImages = [
   "https://i.pinimg.com/1200x/7d/6f/d8/7d6fd855cf63d627942d1e4bf31eac3e.jpg",
   "https://i.pinimg.com/1200x/c4/07/cb/c407cb83c361857b12a970ddfc7e5318.jpg",
@@ -74,7 +76,8 @@ function Hero() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 pt-2 justify-center md:justify-start">
-            <button className="px-6 py-3 rounded-xl bg-primary text-white font-medium shadow-[var(--shadow-soft)] w-full sm:w-auto">
+            <button className="px-6 py-3 rounded-xl bg-primary text-white font-medium shadow-[var(--shadow-soft)] inline-flex items-center gap-2">
+              <ShoppingBag className="w-4 h-4" strokeWidth={1.8} />
               Order Signature Box
             </button>
             <button className="px-6 py-3 rounded-xl bg-primary-soft text-primary font-medium border border-border w-full sm:w-auto">
