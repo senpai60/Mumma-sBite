@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+/* 1) LIGHT THEME VARIABLES – MUMMA'S BITE VIBE */
+:root {
+  --bg: #fff9f4;              /* page background - warm cream */
+  --surface: #fff3f7;         /* cards, sections - blush/rose */
+  --text: #4a2a2a;            /* main text - cocoa brown */
+  --text-light: #7b5555;      /* secondary text */
+  --border: #f2ced4;          /* soft pink border */
+  --accent: #f28ba8;          /* pink accent (chips, tags) */
+  --accent-soft: #ffe6ef;     /* pale pink bg */
+  --primary: #e07b67;         /* main CTA - baked coral */
+  --primary-soft: #ffe1d6;    /* soft peach bg */
+
+  /* fonts */
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+  --font-display: "Playfair Display", "DM Serif Text", serif;
+}
+
+.dark {
+  --bg: #0f0d0c;             /* perfect dark cocoa */
+  --surface: #191615;        /* toned-down soft card brown */
+  --text: #e8dcd4;           /* muted cream (less bright than before) */
+  --text-light: #b8a49c;     /* dusty latte – softer secondary */
+  --border: #1f1a19;         /* very subtle border */
+  
+  --accent: #d88d9d;         /* muted berry (no neon) */
+  --accent-soft: #231b1d;    /* low-contrast berry-cocoa */
+  
+  --primary: #c78360;        /* soft caramel (less orange/brighter) */
+  --primary-soft: #261e1b;   /* calm caramel tint */
+}
+
+
+
+
+/* 3) TAILWIND v4 THEME TOKENS */
+@theme {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-light: var(--text-light);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
+
+  /* optional extras if you want consistent rounding + shadows */
+  --radius-card: 1.25rem;
+  --radius-pill: 999px;
+  --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.06);
+}
