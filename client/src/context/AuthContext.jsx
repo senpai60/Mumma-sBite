@@ -1,0 +1,87 @@
+import { useContext, createContext, useState, useEffect } from "react";
+import { authApi } from "../api/authApi";
+
+const AuthContext = createContext(null);
+
+const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    verifyUser();
+  }, []);
+
+  const loginUser = async (email, password) => {
+    try {
+      setLoading(true);
+
+      const response = await authApi.post("/login", { email, password });
+      if (response.status === 200) {
+        setUser(response.data.user);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Login failed:", err);
+      setLoading(false);
+    }
+  };
+
+  const verifyUser = async () => {
+    setLoading(true);
+    try {
+      const response = await authApi.get("/verify-user");
+      if (response.status === 200) {
+        setUser(response.data.user);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("User verification failed:", err);
+      setLoading(false);
+    }
+  };
+
+  const signupUser = async (username, email, password) => {
+    try {
+      setLoading(true);
+      if (password.length < 6) {
+        throw new Error("Password must be at least 6 characters long");
+      }
+      const response = await authApi.post("/signup", {
+        username,
+        email,
+        password,
+      });
+      if (response.status === 201) {
+        setUser(response.data.user);
+      }
+      setLoading(false);
+    } catch (err) {
+      console.error("Signup failed:", err);
+      setLoading(false);
+    }
+  };
+
+  const logoutUser = async () => {
+    try {
+      setLoading(true);
+    } catch (err) {
+      console.error("Logout failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const value = {
+    user,
+    loading,
+    loginUser,
+    verifyUser,
+    signupUser,
+    logoutUser,
+  };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+export const useAuth = () => {
+  return useContext(AuthContext);
+};
+export default AuthProvider;
