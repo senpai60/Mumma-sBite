@@ -117,5 +117,4 @@ function TopRecipesSection() {
   );
 }
 
-
 export default TopRecipesSection;

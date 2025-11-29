@@ -1,5 +1,6 @@
 import Hero from "../sections/Home/Hero"
 import MarqueeHighlights from "../sections/Home/MarqueeHighlights"
+import TestimonialSection from "../sections/Home/TestinomalSection"
 import TopRecipesSection from "../sections/Home/TopRecipesSection"
 
 function Home() {
@@ -8,6 +9,7 @@ function Home() {
         <Hero/>
         <MarqueeHighlights/>
         <TopRecipesSection/>
+        <TestimonialSection/>
     </main>
   )
 }
