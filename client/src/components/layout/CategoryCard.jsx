@@ -6,8 +6,8 @@ function CategoryCard({ title, description, image, badge }) {
       {/* Background image */}
       {image && (
         <div
-          className="absolute inset-0 bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
-          style={{ backgroundImage: `url(${image})` }}
+          className="absolute inset-0 bg-bg bg-cover bg-center opacity-60 group-hover:opacity-80 transition-opacity duration-500"
+          // style={{ backgroundImage: `url(${image})` }}
         />
       )}
 

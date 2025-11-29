@@ -1,3 +1,4 @@
+import AboutSection from "../sections/Home/AboutSection"
 import CategoriesSection from "../sections/Home/CategoriesSection"
 import Hero from "../sections/Home/Hero"
 import MarqueeHighlights from "../sections/Home/MarqueeHighlights"
@@ -12,6 +13,7 @@ function Home() {
         <TopRecipesSection/>
         <TestimonialSection/>
         <CategoriesSection/>
+        <AboutSection/>
     </main>
   )
 }
