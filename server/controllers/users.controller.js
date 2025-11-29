@@ -6,17 +6,17 @@ import {logger} from "../config/logger.config.js";
 // POST /api/users/register
 export const registerUser = async (req, res, next) => {
   try {
-    const { username, email, password, phone } = req.body;
+    const { name, email, password, phone } = req.body;
 
-    if (!username || !password || (!email && !phone)) {
+    if (!name || !password || (!email && !phone)) {
       return res.status(400).json({
         success: false,
-        message: "username, password and at least email or phone is required",
+        message: "name, password and at least email or phone is required",
       });
     }
 
     const user = await userService.registerUser({
-      username,
+      name,
       email,
       password,
       phone,
@@ -31,7 +31,7 @@ export const registerUser = async (req, res, next) => {
       message: "User registered successfully",
       user: {
         id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
@@ -65,7 +65,7 @@ export const loginUser = async (req, res, next) => {
       message: "Logged in successfully",
       user: {
         id: user._id,
-        username: user.username,
+        name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,

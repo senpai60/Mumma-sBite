@@ -10,7 +10,11 @@ import { protect } from "../middlewares/auth.middleware.js";
 const router = Router();
 
 router.get("/", (req, res) => {
-  res.send("Users API is running...");
+  try {
+    res.status(200).json({ message: "Users route is working!" });
+  } catch (err) {
+    console.error(err);
+  }
 });
 
 router.post("/register", registerUser);

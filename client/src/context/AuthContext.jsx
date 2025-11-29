@@ -16,9 +16,11 @@ const AuthProvider = ({ children }) => {
       setLoading(true);
 
       const response = await authApi.post("/login", { email, password });
+      
       if (response.status === 200) {
         setUser(response.data.user);
       }
+      await verifyUser();
       setLoading(false);
     } catch (err) {
       console.error("Login failed:", err);
@@ -29,7 +31,7 @@ const AuthProvider = ({ children }) => {
   const verifyUser = async () => {
     setLoading(true);
     try {
-      const response = await authApi.get("/verify-user");
+      const response = await authApi.get("/me");
       if (response.status === 200) {
         setUser(response.data.user);
       }
@@ -40,20 +42,21 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const signupUser = async (username, email, password) => {
+  const signupUser = async (name, email, password) => {
     try {
       setLoading(true);
       if (password.length < 6) {
         throw new Error("Password must be at least 6 characters long");
       }
-      const response = await authApi.post("/signup", {
-        username,
+      const response = await authApi.post("/register", {
+        name,
         email,
         password,
       });
       if (response.status === 201) {
         setUser(response.data.user);
       }
+      await verifyUser();
       setLoading(false);
     } catch (err) {
       console.error("Signup failed:", err);
@@ -64,6 +67,7 @@ const AuthProvider = ({ children }) => {
   const logoutUser = async () => {
     try {
       setLoading(true);
+      
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {

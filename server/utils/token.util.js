@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { ENV_CONFIG } from "../config/env.config.js";
 
 export const generateTokens = (user) => {
   const payload = {
@@ -6,11 +7,11 @@ export const generateTokens = (user) => {
     role: user.role,
   };
 
-  const accessToken = jwt.sign(payload, process.env.JWT_ACCESS_SECRET, {
+  const accessToken = jwt.sign(payload, ENV_CONFIG.JWT_ACCESS_SECRET, {
     expiresIn: "15m",
   });
 
-  const refreshToken = jwt.sign(payload, process.env.JWT_REFRESH_SECRET, {
+  const refreshToken = jwt.sign(payload, ENV_CONFIG.JWT_REFRESH_SECRET, {
     expiresIn: "7d",
   });
 

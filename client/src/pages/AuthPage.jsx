@@ -8,6 +8,9 @@ import {
   ArrowRight,
   Chrome,
 } from "lucide-react";
+import { authApi } from "../api/authApi";
+import { useAuth } from "../context/AuthContext";
+import { useEffect } from "react";
 // import { ThemeToggle } from "../components/ui/ThemeToggle"; // if you want theme toggle here
 
 function InputField({ label, type = "text", icon: Icon, ...props }) {
@@ -79,11 +82,17 @@ function AuthTabs({ mode, setMode }) {
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
+  const {loginUser,signupUser}=useAuth();
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
     const payload = Object.fromEntries(formData.entries());
+    if (mode === "login") {
+      loginUser(payload.email, payload.password);
+    } else {
+      signupUser(payload.name, payload.email, payload.password);
+    }
     console.log(`${mode.toUpperCase()} with email/password:`, payload);
     // TODO: hook to your backend / firebase / supabase
   };
@@ -97,6 +106,18 @@ export default function AuthPage() {
     console.log("Continue with mobile clicked");
     // TODO: open mobile OTP flow
   };
+
+  useEffect(()=>{
+    const testAuth = async()=>{
+      try{
+        const response = await authApi.get('/');
+        console.log("Authenticated user:",response.data?.message);
+      }catch(err){
+        console.log("Not authenticated",err.response?.data || err.message);
+      }
+    };
+    testAuth();
+  },[])
 
   const isLogin = mode === "login";
 

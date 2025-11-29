@@ -3,7 +3,7 @@ import { AppError } from "../utils/AppError.js";
 import {logger} from "../config/logger.config.js"; // ya jo bhi tera path hai
 
 // Create/Register user (email + password / phone mix)
-export const registerUser = async ({ username, email, password, phone }) => {
+export const registerUser = async ({ name, email, password, phone }) => {
   const existingUser = await User.findOne({
     $or: [{ email }, { phone }],
   });
@@ -13,7 +13,7 @@ export const registerUser = async ({ username, email, password, phone }) => {
   }
 
   const user = await User.create({
-    username,
+    name,
     email,
     password, // password hashing model middleware me ho raha hai
     phone,
