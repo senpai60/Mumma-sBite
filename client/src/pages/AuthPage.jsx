@@ -8,6 +8,7 @@ import {
   ArrowRight,
   Chrome,
 } from "lucide-react";
+import LoaderPrimary from "../components/ui/LoaderPrimary.jsx";
 import { authApi } from "../api/authApi";
 import { useAuth } from "../context/AuthContext";
 import { useEffect } from "react";
@@ -82,7 +83,7 @@ function AuthTabs({ mode, setMode }) {
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
-  const {loginUser,signupUser}=useAuth();
+  const { loginUser, signupUser, loading } = useAuth();
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
@@ -107,17 +108,17 @@ export default function AuthPage() {
     // TODO: open mobile OTP flow
   };
 
-  useEffect(()=>{
-    const testAuth = async()=>{
-      try{
-        const response = await authApi.get('/');
-        console.log("Authenticated user:",response.data?.message);
-      }catch(err){
-        console.log("Not authenticated",err.response?.data || err.message);
+  useEffect(() => {
+    const testAuth = async () => {
+      try {
+        const response = await authApi.get("/");
+        console.log("Authenticated user:", response.data?.message);
+      } catch (err) {
+        console.log("Not authenticated", err.response?.data || err.message);
       }
     };
     testAuth();
-  },[])
+  }, []);
 
   const isLogin = mode === "login";
 
@@ -241,10 +242,23 @@ export default function AuthPage() {
 
             <button
               type="submit"
-              className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-medium px-4 py-2.5 mt-1 hover:opacity-90 transition"
+              disabled={loading}
+              className={`w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-xs sm:text-sm font-medium px-4 py-2.5 mt-1 transition
+    ${loading ? "opacity-70 cursor-not-allowed" : "hover:opacity-90"}`}
             >
-              {isLogin ? "Login to your account" : "Create account"}
-              <ArrowRight className="h-3.5 w-3.5" />
+              {loading ? (
+                <>
+                  <LoaderPrimary className="h-4 w-4" />
+                  <span>
+                    {isLogin ? "Logging in..." : "Creating account..."}
+                  </span>
+                </>
+              ) : (
+                <>
+                  {isLogin ? "Login to your account" : "Create account"}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </>
+              )}
             </button>
 
             {!isLogin && (
@@ -277,7 +291,8 @@ export default function AuthPage() {
                 🍫 Mumma’s Bite
               </div>
               <h2 className="font-display text-2xl text-text">
-                Sign in to your<br /> comfort dessert zone
+                Sign in to your
+                <br /> comfort dessert zone
               </h2>
               <p className="font-sans text-xs text-text-light max-w-xs">
                 Save your favourites, repeat last orders in seconds, and never
@@ -296,6 +311,14 @@ export default function AuthPage() {
           </div>
         </div>
       </div>
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <div className="bg-surface border border-border rounded-2xl px-6 py-4 flex flex-col items-center gap-2 shadow-lg">
+            <LoaderPrimary className="h-6 w-6" />
+            <p className="text-xs text-text-light">Please wait, processing…</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

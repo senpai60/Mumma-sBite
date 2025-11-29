@@ -1,7 +1,7 @@
 import * as userService from "../services/users.service.js";
 import { generateTokens } from "../utils/token.util.js";
 import { setAuthCookies } from "../utils/cookie.util.js";
-import {logger} from "../config/logger.config.js";
+import { logger } from "../config/logger.config.js";
 
 // POST /api/users/register
 export const registerUser = async (req, res, next) => {
@@ -59,6 +59,7 @@ export const loginUser = async (req, res, next) => {
     const { accessToken, refreshToken } = generateTokens(user);
 
     setAuthCookies(res, accessToken, refreshToken);
+    console.log("SET-COOKIE ===>", res.getHeaders()["set-cookie"]);
 
     return res.status(200).json({
       success: true,

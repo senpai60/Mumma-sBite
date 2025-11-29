@@ -7,6 +7,7 @@ import { ENV_CONFIG } from "../config/env.config.js";
 export const protect = async (req, res, next) => {
   try {
     let token;
+    console.log("REQ COOKIES ===>", req.cookies);
 
     // 1️⃣ Extract token (cookie → header → body fallback)
     if (req.cookies?.accessToken) {

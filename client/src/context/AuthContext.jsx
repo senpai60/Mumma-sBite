@@ -67,7 +67,7 @@ const AuthProvider = ({ children }) => {
   const logoutUser = async () => {
     try {
       setLoading(true);
-      
+      await authApi.post("/logout");
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {

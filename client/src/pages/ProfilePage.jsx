@@ -14,6 +14,8 @@ import {
   ChevronRight,
 } from "lucide-react";
 
+import { useAuth } from "../context/AuthContext";
+
 function ProfileSectionCard({ title, description, children, rightSlot }) {
   return (
     <section className="bg-surface border border-border rounded-[var(--radius-card)] p-4 sm:p-5 shadow-[var(--shadow-soft)] space-y-3">
@@ -36,7 +38,13 @@ function ProfileSectionCard({ title, description, children, rightSlot }) {
 }
 
 function ProfileAvatar({ name }) {
-  const initials = name
+  // SAFE: even if name is undefined/null/empty
+  const safeName =
+    typeof name === "string" && name.trim().length > 0
+      ? name
+      : "Mummas Bite User";
+
+  const initials = safeName
     .split(" ")
     .map((n) => n[0]?.toUpperCase())
     .slice(0, 2)
@@ -86,7 +94,7 @@ function InfoRow({ icon: Icon, label, value }) {
         )}
         <span>{label}</span>
       </div>
-      <span className="text-text font-medium">{value}</span>
+      <span className="text-text font-medium">{value || "Not added"}</span>
     </div>
   );
 }
@@ -141,13 +149,7 @@ export default function ProfilePage() {
   const [promoEmails, setPromoEmails] = useState(true);
   const [promoWhatsapp, setPromoWhatsapp] = useState(false);
 
-  const user = {
-    name: "Vivek Sharma",
-    email: "vivek@example.com",
-    phone: "+91 98765 43210",
-    joined: "Jan 2025",
-    tier: "Regular",
-  };
+  const { user, logoutUser } = useAuth(); // assume null/undefined initially allowed
 
   const addresses = [
     {
@@ -193,25 +195,28 @@ export default function ProfilePage() {
     },
   ];
 
+  const handleLogout = async () => {
+    await logoutUser();
+  };
   return (
     <main className="bg-bg text-text min-h-[70vh] px-4 py-8 sm:px-6 md:px-12">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Top: avatar + basic info */}
         <section className="bg-surface border border-border rounded-[var(--radius-card)] p-4 sm:p-5 md:p-6 shadow-[var(--shadow-soft)] flex flex-col sm:flex-row gap-4 sm:gap-5 items-start sm:items-center justify-between">
           <div className="flex items-start gap-4 sm:gap-5">
-            <ProfileAvatar name={user.name} />
+            <ProfileAvatar name={user?.name} />
             <div className="space-y-2">
               <div>
                 <h1 className="font-display text-lg sm:text-xl text-text">
-                  {user.name}
+                  {user?.name || "Guest User"}
                 </h1>
                 <p className="font-sans text-[0.75rem] sm:text-xs text-text-light">
                   Loves dark chocolate & gooey brownies 🍫
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Pill>Member since {user.joined}</Pill>
-                <Pill>Tier: {user.tier}</Pill>
+                <Pill>Member since {user?.joined || "Recently"}</Pill>
+                <Pill>Tier: {user?.tier || "Regular"}</Pill>
               </div>
             </div>
           </div>
@@ -221,7 +226,7 @@ export default function ProfilePage() {
               <button className="px-3 py-1.5 rounded-lg bg-bg border border-border text-xs sm:text-sm font-medium">
                 Edit profile
               </button>
-              <button className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs sm:text-sm font-medium inline-flex items-center gap-1">
+              <button onClick={handleLogout} className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs sm:text-sm font-medium inline-flex items-center gap-1">
                 <LogOut className="h-3.5 w-3.5" />
                 Logout
               </button>
@@ -248,8 +253,8 @@ export default function ProfilePage() {
               }
             >
               <div className="space-y-2">
-                <InfoRow icon={Mail} label="Email" value={user.email} />
-                <InfoRow icon={Phone} label="Phone" value={user.phone} />
+                <InfoRow icon={Mail} label="Email" value={user?.email} />
+                <InfoRow icon={Phone} label="Phone" value={user?.phone} />
               </div>
             </ProfileSectionCard>
 
@@ -337,8 +342,16 @@ export default function ProfilePage() {
               description="Your recent activity with Mumma’s Bite."
             >
               <div className="grid grid-cols-2 gap-2">
-                <SmallStat icon={Package} label="Total orders" value={quickStats.orders} />
-                <SmallStat icon={Heart} label="Favourites" value={quickStats.favorites} />
+                <SmallStat
+                  icon={Package}
+                  label="Total orders"
+                  value={quickStats.orders}
+                />
+                <SmallStat
+                  icon={Heart}
+                  label="Favourites"
+                  value={quickStats.favorites}
+                />
                 <SmallStat
                   icon={Package}
                   label="This month spent"
@@ -394,11 +407,15 @@ export default function ProfilePage() {
               <div className="space-y-2 text-[0.75rem] text-text-light">
                 <div className="flex items-center justify-between">
                   <span>Login method</span>
-                  <span className="font-medium text-text">Email + password</span>
+                  <span className="font-medium text-text">
+                    Email + password
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Two-step verification</span>
-                  <span className="font-medium text-text-light">Not enabled</span>
+                  <span className="font-medium text-text-light">
+                    Not enabled
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span>Last active device</span>
