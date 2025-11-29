@@ -3,6 +3,9 @@
 /**
  * Module dependencies.
  */
+import { connectDB } from "../config/db.config.js";
+connectDB()
+
 import app from "../app.js";
 import createDebug from "debug";
 const debug = createDebug("server:server"); // ✅ Correct [web:34]
