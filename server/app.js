@@ -8,14 +8,18 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
+import cors from 'cors';
 
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { corsOptions } from "./config/corsOptions.config.js";
 
 import indexRouter from "./routes/index.js";
-import usersRouter from "./routes/users.js";
+import usersRouter from "./routes/users.routes.js";
 
 const app = express();
 
+
+app.use(cors(corsOptions));
 app.use(errorHandler);
 app.use(logger("dev"));
 app.use(express.json());
@@ -25,5 +29,6 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
+
 
 export default app;
