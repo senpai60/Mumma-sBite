@@ -10,10 +10,14 @@ export const getProducts = async () => {
 };
 
 export const getSingleProduct = async (productId) => {
-    const { productId } = req.params;
-    const product = await Product.findById(productId);
-    if (!product) {
-      throw new AppError("Product not found", 404);
-    }
-    return product;
-}
+  const { productId } = req.params;
+  const product = await Product.findById(productId);
+  if (!product) {
+    throw new AppError("Product not found", 404);
+  }
+  return product;
+};
+
+export const injectProducts = async (productsArr) => {
+  for (const productData of productsArr) {}
+};

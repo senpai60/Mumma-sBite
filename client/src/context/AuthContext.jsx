@@ -68,9 +68,12 @@ const AuthProvider = ({ children }) => {
     try {
       setLoading(true);
       await authApi.post("/logout");
+      setUser(null);
+      await verifyUser();
     } catch (err) {
       console.error("Logout failed:", err);
     } finally {
+      await verifyUser();
       setLoading(false);
     }
   };
