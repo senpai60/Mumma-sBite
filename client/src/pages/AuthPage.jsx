@@ -83,7 +83,7 @@ function AuthTabs({ mode, setMode }) {
 
 export default function AuthPage() {
   const [mode, setMode] = useState("login"); // "login" | "signup"
-  const { loginUser, signupUser, loading } = useAuth();
+  const { loginUser, signupUser, loading, googleLogin } = useAuth();
 
   const handleEmailSubmit = (e) => {
     e.preventDefault();
@@ -99,8 +99,7 @@ export default function AuthPage() {
   };
 
   const handleGoogle = () => {
-    console.log("Google auth clicked");
-    // TODO: integrate Google OAuth
+    return googleLogin();
   };
 
   const handleMobile = () => {

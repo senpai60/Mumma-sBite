@@ -8,7 +8,9 @@ import express from "express";
 import path from "path";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
-import cors from 'cors';
+import cors from "cors";
+import passport from "passport";
+import "./config/passport.config.js";
 
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { corsOptions } from "./config/corsOptions.config.js";
@@ -18,8 +20,8 @@ import usersRouter from "./routes/users.routes.js";
 
 const app = express();
 
-
 app.use(cors(corsOptions));
+app.use(passport.initialize());
 app.use(errorHandler);
 app.use(logger("dev"));
 app.use(express.json());
@@ -29,6 +31,5 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-
 
 export default app;

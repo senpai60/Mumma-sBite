@@ -2,7 +2,7 @@ import { useContext, createContext, useState, useEffect } from "react";
 import { authApi } from "../api/authApi";
 
 const AuthContext = createContext(null);
-
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -16,7 +16,7 @@ const AuthProvider = ({ children }) => {
       setLoading(true);
 
       const response = await authApi.post("/login", { email, password });
-      
+
       if (response.status === 200) {
         setUser(response.data.user);
       }
@@ -26,6 +26,11 @@ const AuthProvider = ({ children }) => {
       console.error("Login failed:", err);
       setLoading(false);
     }
+  };
+
+  // React / plain JS
+  const googleLogin = () => {
+    return (window.location.href = `${SERVER_URL}/users/google`); // backend URL
   };
 
   const verifyUser = async () => {
@@ -81,6 +86,7 @@ const AuthProvider = ({ children }) => {
   const value = {
     user,
     loading,
+    googleLogin,
     loginUser,
     verifyUser,
     signupUser,

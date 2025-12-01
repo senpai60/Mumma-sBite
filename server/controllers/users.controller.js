@@ -56,6 +56,8 @@ export const loginUser = async (req, res, next) => {
 
     const user = await userService.loginWithEmail({ email, password });
 
+    
+
     const { accessToken, refreshToken } = generateTokens(user);
 
     setAuthCookies(res, accessToken, refreshToken);

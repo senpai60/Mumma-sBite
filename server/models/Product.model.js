@@ -9,6 +9,7 @@ const productSchema = new mongoose.Schema(
     tags: [{ type: String }],
     imageUrl: { type: String, required: true },
     stock: { type: Number, required: true, default: 0 },
+    orderedUserIds: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   },
   { timestamps: true }
 );

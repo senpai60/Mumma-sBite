@@ -1,10 +1,11 @@
-import {logger} from "./logger.config.js";
+import { logger } from "./logger.config.js";
 
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:3000",
   "http://127.0.0.1:5173",
-  "https://yourdomain.com",
+  "http://localhost:3000/users/google/callback",
+  "http://localhost:3000/users/google",
   "https://www.yourdomain.com",
 ];
 
