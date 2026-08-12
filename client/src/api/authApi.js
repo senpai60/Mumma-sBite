@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE = import.meta.env.VITE_SERVER_URI || "http://localhost:3000";
+const BASE = import.meta.env.VITE_SERVER_URI || (import.meta.env.PROD ? "" : "http://localhost:3000");
 
 // Auth endpoints: /api/auth/login, /api/auth/register, /api/auth/logout, /api/auth/otp/*
 export const authApi = axios.create({

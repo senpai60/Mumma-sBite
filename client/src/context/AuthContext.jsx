@@ -2,7 +2,7 @@ import { useContext, createContext, useState, useEffect } from "react";
 import { authApi, userApi } from "../api/authApi";
 
 const AuthContext = createContext(null);
-const SERVER_URL = import.meta.env.VITE_SERVER_URI || "http://localhost:3000";
+const SERVER_URL = import.meta.env.VITE_SERVER_URI || (import.meta.env.PROD ? "" : "http://localhost:3000");
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
