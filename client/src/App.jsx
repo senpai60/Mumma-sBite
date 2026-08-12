@@ -4,6 +4,7 @@ import CartPage from "./pages/CartPage";
 import Home from "./pages/Home";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
+import PaymentPage from "./pages/PaymentPage";
 import { useEffect } from "react";
 
 import { useAuth } from "./context/AuthContext";
@@ -23,6 +24,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/cart" element={user ? <CartPage /> : <AuthPage />} />
+        <Route path="/payment" element={user ? <PaymentPage /> : <AuthPage />} />
         <Route path="/profile" element={user ? <ProfilePage /> : <AuthPage />} />
         <Route path="/auth" element={<AuthPage />} />
       </Routes>

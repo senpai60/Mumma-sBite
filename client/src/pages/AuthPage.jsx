@@ -367,6 +367,7 @@ export default function AuthPage() {
       {otpStep && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
           <div className="bg-surface border border-border rounded-2xl w-full max-w-sm p-6 shadow-xl flex flex-col gap-5">
+            <div id="recaptcha-container"></div>
             {/* Header */}
             <div className="flex items-start justify-between">
               <div>

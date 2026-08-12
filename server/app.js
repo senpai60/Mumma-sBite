@@ -20,6 +20,7 @@ import authRouter from "./modules/auth/auth.routes.js";
 import userRouter from "./modules/user/user.routes.js";
 import cartRouter from "./modules/cart/cart.routes.js";
 import productsRouter from "./routes/products.routes.js";
+import orderRouter from "./modules/order/order.routes.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/users", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/products", productsRouter);
+app.use("/api/order", orderRouter);
 
 // Health check route for uptime monitors
 app.get("/health", (req, res) => {

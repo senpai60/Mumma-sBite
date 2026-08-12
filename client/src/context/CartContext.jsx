@@ -21,6 +21,7 @@ export const CartContextProvider = ({ children }) => {
       const res = await cartApi.get("/");
       if (res.data && res.data.cart) {
         setCart(res.data.cart);
+        // console.log(res.data);
       } else {
         setCart(res.data);
       }

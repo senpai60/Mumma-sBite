@@ -7,6 +7,7 @@ import {
   logout,
   sendOtp,
   verifyOtp,
+  verifyFirebaseToken,
   googleCallback,
 } from "./auth.controller.js";
 
@@ -20,6 +21,7 @@ router.post("/logout", protect, logout);
 // ─── OTP Auth ─────────────────────────────────────────────────────────────────
 router.post("/otp/send", sendOtp);
 router.post("/otp/verify", verifyOtp);
+router.post("/otp/verify-firebase", verifyFirebaseToken);
 
 // ─── Google OAuth ─────────────────────────────────────────────────────────────
 router.get(

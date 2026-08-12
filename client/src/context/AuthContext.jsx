@@ -1,4 +1,6 @@
 import { useContext, createContext, useState, useEffect } from "react";
+import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { auth } from "../config/firebase.config";
 import { authApi, userApi } from "../api/authApi";
 
 const AuthContext = createContext(null);
@@ -83,14 +85,32 @@ const AuthProvider = ({ children }) => {
     }
   };
 
-  const sendOtp = async (phone) => {
+  const sendOtp = async (phone, containerId = "recaptcha-container") => {
     setLoading(true);
     try {
-      await authApi.post("/otp/send", { phone });
+      if (!window.recaptchaVerifier) {
+        window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+          size: "invisible",
+          callback: () => {},
+          "expired-callback": () => {
+            if (window.recaptchaVerifier) {
+              window.recaptchaVerifier.clear();
+              window.recaptchaVerifier = null;
+            }
+          }
+        });
+      }
+      const formattedPhone = phone.startsWith("+") ? phone : `+91${phone.replace(/\D/g, "")}`;
+      const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+      window.confirmationResult = confirmationResult;
       setLoading(false);
       return true;
     } catch (err) {
-      console.error("Send OTP failed:", err);
+      console.error("Send OTP via Firebase failed:", err);
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = null;
+      }
       setLoading(false);
       throw err;
     }
@@ -99,7 +119,14 @@ const AuthProvider = ({ children }) => {
   const verifyOtp = async (phone, otp, name) => {
     setLoading(true);
     try {
-      const response = await authApi.post("/otp/verify", { phone, otp, name });
+      if (!window.confirmationResult) {
+        throw new Error("No OTP request found. Please request a new OTP.");
+      }
+      const result = await window.confirmationResult.confirm(otp);
+      const firebaseUser = result.user;
+      const idToken = await firebaseUser.getIdToken();
+
+      const response = await authApi.post("/otp/verify-firebase", { idToken, name });
       if (response.status === 200) {
         setUser(response.data.user);
       }
@@ -107,7 +134,7 @@ const AuthProvider = ({ children }) => {
       setLoading(false);
       return true;
     } catch (err) {
-      console.error("Verify OTP failed:", err);
+      console.error("Verify OTP via Firebase failed:", err);
       setLoading(false);
       throw err;
     }

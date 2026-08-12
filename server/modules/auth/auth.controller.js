@@ -106,6 +106,55 @@ export const verifyOtp = async (req, res, next) => {
   }
 };
 
+// ─── Firebase OTP Auth ────────────────────────────────────────────────────────
+import { firebaseAuth } from "../../config/firebase.config.js";
+import User from "../../models/User.model.js";
+
+export const verifyFirebaseToken = async (req, res, next) => {
+  try {
+    const { idToken, name } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ success: false, message: "Firebase ID Token is required" });
+    }
+
+    const decodedToken = await firebaseAuth.verifyIdToken(idToken);
+    const phone = decodedToken.phone_number;
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: "No phone number associated with this token" });
+    }
+
+    // Standardize phone format (extract 10 digit number)
+    const cleanedPhone = phone.replace(/\D/g, "").slice(-10);
+
+    let user = await User.findOne({ $or: [{ phone: cleanedPhone }, { phone }] });
+
+    if (!user) {
+      user = await User.create({
+        name: name || "User",
+        phone: cleanedPhone,
+        role: "basic user",
+      });
+      logger.info(`New user via Firebase OTP: ${user._id}`);
+    } else {
+      logger.info(`Existing user verified via Firebase OTP: ${user._id}`);
+    }
+
+    const { accessToken, refreshToken } = generateTokens(user);
+    setAuthCookies(res, accessToken, refreshToken);
+
+    return res.status(200).json({
+      success: true,
+      message: "Firebase OTP verified, logged in",
+      user: { id: user._id, name: user.name, phone: user.phone, role: user.role },
+    });
+  } catch (err) {
+    logger.error("Firebase token verification error:", err);
+    return res.status(401).json({ success: false, message: "Invalid or expired Firebase token" });
+  }
+};
+
 // ─── Google OAuth ─────────────────────────────────────────────────────────────
 
 // GET /auth/google/callback  (called after passport.authenticate succeeds)
@@ -114,3 +163,4 @@ export const googleCallback = (req, res) => {
   setAuthCookies(res, accessToken, refreshToken);
   return res.redirect(`${ENV_CONFIG.FRONTEND_URL}/profile`);
 };
+

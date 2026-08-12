@@ -5,11 +5,18 @@ import CartItem from "../components/cart/CartItem";
 import CartSummary from "../components/cart/CartSummary";
 import { useCartContext } from "../context/CartContext";
 import LoaderPrimary from "../components/ui/LoaderPrimary";
+import axios from "axios";
 
 function CartPage() {
   const navigate = useNavigate();
-  const { cart, loading, fetchCart, updateCartItem, deleteCartItem, clearCart } =
-    useCartContext();
+  const {
+    cart,
+    loading,
+    fetchCart,
+    updateCartItem,
+    deleteCartItem,
+    clearCart,
+  } = useCartContext();
 
   useEffect(() => {
     if (!cart) {
@@ -45,8 +52,7 @@ function CartPage() {
   };
 
   const handleCheckout = () => {
-    console.log("Proceeding to checkout with backend cart:", cart);
-    alert("Checkout flow ready for integration! Total amount: ₹" + total);
+    navigate("/payment");
   };
 
   const handleContinueShopping = () => {
@@ -85,9 +91,7 @@ function CartPage() {
           <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
             {/* Left: Items */}
             <div className="flex-1 space-y-3">
-              <h1 className="font-display text-2xl sm:text-3xl">
-                Your Cart
-              </h1>
+              <h1 className="font-display text-2xl sm:text-3xl">Your Cart</h1>
               <p className="font-sans text-xs sm:text-sm text-text-light mb-2">
                 {products.length === 0
                   ? "Your cart is empty. Add some treats from Mumma's Bite!"
