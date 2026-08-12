@@ -149,12 +149,93 @@ export default function ProfilePage() {
   const [promoEmails, setPromoEmails] = useState(true);
   const [promoWhatsapp, setPromoWhatsapp] = useState(false);
 
-  const { user, logoutUser } = useAuth(); // assume null/undefined initially allowed
+  const { user, logoutUser, updateUser, sendOtp, loading } = useAuth(); // assume null/undefined initially allowed
+
+  // Edit Modal State
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStep, setEditStep] = useState("details"); // "details" | "verify-phone"
+  const [formData, setFormData] = useState({
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    address: user?.address || "",
+  });
+  const [otpCode, setOtpCode] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const openEditModal = () => {
+    setFormData({
+      name: user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+    });
+    setOtpCode("");
+    setEditStep("details");
+    setSaveError("");
+    setSaveSuccess("");
+    setIsEditing(true);
+  };
+
+  const isPhoneChanged =
+    formData.phone && formData.phone.trim() !== (user?.phone || "").trim();
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setSaveError("");
+    setSaveSuccess("");
+
+    // If phone number was changed and we're still on details step, require OTP verification first
+    if (isPhoneChanged && editStep === "details") {
+      const cleaned = formData.phone.replace(/\D/g, "");
+      if (cleaned.length !== 10) {
+        setSaveError("Please enter a valid 10-digit mobile number.");
+        return;
+      }
+
+      setSaving(true);
+      try {
+        await sendOtp(cleaned);
+        setEditStep("verify-phone");
+        setSaveSuccess(`OTP sent to +91 ${cleaned} via WhatsApp / SMS!`);
+      } catch (err) {
+        setSaveError(
+          err.response?.data?.message || "Failed to send OTP. Please try again."
+        );
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Final save (either phone didn't change, or OTP step completed)
+    setSaving(true);
+    try {
+      const payload = {
+        ...formData,
+        ...(isPhoneChanged ? { otp: otpCode } : {}),
+      };
+      await updateUser(payload);
+      setSaveSuccess("Profile updated successfully!");
+      setTimeout(() => {
+        setIsEditing(false);
+        setSaveSuccess("");
+        setEditStep("details");
+        setOtpCode("");
+      }, 1200);
+    } catch (err) {
+      setSaveError(err.response?.data?.message || "Failed to update profile");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const addresses = [
     {
       id: 1,
-      line1: "201, Shanti Nagar",
+      line1: user?.address || "201, Shanti Nagar",
       line2: "Near City Garden",
       city: "Indore",
       state: "Madhya Pradesh",
@@ -223,7 +304,10 @@ export default function ProfilePage() {
 
           <div className="flex flex-col items-stretch gap-2 sm:items-end">
             <div className="flex gap-2">
-              <button className="px-3 py-1.5 rounded-lg bg-bg border border-border text-xs sm:text-sm font-medium">
+              <button 
+                onClick={openEditModal}
+                className="px-3 py-1.5 rounded-lg bg-bg border border-border text-xs sm:text-sm font-medium hover:border-primary transition"
+              >
                 Edit profile
               </button>
               <button onClick={handleLogout} className="px-3 py-1.5 rounded-lg bg-primary text-white text-xs sm:text-sm font-medium inline-flex items-center gap-1">
@@ -246,7 +330,10 @@ export default function ProfilePage() {
               title="Contact details"
               description="We’ll use this to send order updates and important info."
               rightSlot={
-                <button className="text-[0.7rem] text-primary inline-flex items-center gap-1">
+                <button 
+                  onClick={openEditModal}
+                  className="text-[0.7rem] text-primary inline-flex items-center gap-1 hover:underline"
+                >
                   <Edit3 className="h-3 w-3" />
                   Edit
                 </button>
@@ -426,6 +513,175 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Profile Modal */}
+      {isEditing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+          <div className="bg-surface border border-border rounded-2xl w-full max-w-md p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="font-display text-lg text-text">
+                  {editStep === "details" ? "Edit Profile" : "Verify Mobile Number"}
+                </h2>
+                <p className="text-xs text-text-light">
+                  {editStep === "details"
+                    ? "Update your contact info and default shipping details."
+                    : `Enter the 6-digit OTP sent to +91 ${formData.phone}`}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditing(false)}
+                className="text-text-light hover:text-text text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+
+            {saveError && (
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs">
+                {saveError}
+              </div>
+            )}
+
+            {saveSuccess && (
+              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs">
+                {saveSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              {editStep === "details" ? (
+                <>
+                  <label className="flex flex-col gap-1 text-xs text-text">
+                    <span className="text-text-light">Full Name</span>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) =>
+                        setFormData({ ...formData, name: e.target.value })
+                      }
+                      required
+                      placeholder="Enter your name"
+                      className="w-full rounded-xl bg-bg border border-border px-3 py-2 text-xs sm:text-sm text-text outline-none focus:border-primary"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs text-text">
+                    <span className="text-text-light">Email Address</span>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) =>
+                        setFormData({ ...formData, email: e.target.value })
+                      }
+                      placeholder="you@example.com"
+                      className="w-full rounded-xl bg-bg border border-border px-3 py-2 text-xs sm:text-sm text-text outline-none focus:border-primary"
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs text-text">
+                    <div className="flex items-center justify-between">
+                      <span className="text-text-light">Mobile Phone</span>
+                      {isPhoneChanged && (
+                        <span className="text-[0.65rem] text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full font-medium">
+                          OTP Verification Required
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) =>
+                        setFormData({ ...formData, phone: e.target.value })
+                      }
+                      placeholder="10-digit mobile number"
+                      className={`w-full rounded-xl bg-bg border px-3 py-2 text-xs sm:text-sm text-text outline-none transition ${
+                        isPhoneChanged
+                          ? "border-amber-500/50 focus:border-amber-500"
+                          : "border-border focus:border-primary"
+                      }`}
+                    />
+                  </label>
+
+                  <label className="flex flex-col gap-1 text-xs text-text">
+                    <span className="text-text-light">Default Address</span>
+                    <textarea
+                      rows={2}
+                      value={formData.address}
+                      onChange={(e) =>
+                        setFormData({ ...formData, address: e.target.value })
+                      }
+                      placeholder="Street, City, State, Pincode"
+                      className="w-full rounded-xl bg-bg border border-border px-3 py-2 text-xs sm:text-sm text-text outline-none focus:border-primary resize-none"
+                    />
+                  </label>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="flex-1 rounded-xl border border-border text-xs sm:text-sm text-text-light py-2 hover:border-primary transition"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="flex-1 rounded-xl bg-primary text-white text-xs sm:text-sm font-medium py-2 transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      {saving
+                        ? "Sending OTP…"
+                        : isPhoneChanged
+                        ? "Verify Phone & Save"
+                        : "Save Changes"}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <label className="flex flex-col gap-1 text-xs text-text">
+                    <span className="text-text-light">6-Digit OTP Code</span>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      value={otpCode}
+                      onChange={(e) =>
+                        setOtpCode(e.target.value.replace(/\D/g, ""))
+                      }
+                      required
+                      placeholder="______"
+                      className="w-full rounded-xl bg-bg border border-primary px-3 py-2.5 text-center font-mono text-base tracking-widest text-text outline-none"
+                    />
+                  </label>
+
+                  <div className="flex gap-2 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setEditStep("details");
+                        setSaveError("");
+                        setSaveSuccess("");
+                      }}
+                      className="flex-1 rounded-xl border border-border text-xs sm:text-sm text-text-light py-2 hover:border-primary transition"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={saving || otpCode.length !== 6}
+                      className="flex-1 rounded-xl bg-primary text-white text-xs sm:text-sm font-medium py-2 transition hover:opacity-90 disabled:opacity-60"
+                    >
+                      {saving ? "Verifying…" : "Verify & Save Profile"}
+                    </button>
+                  </div>
+                </>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

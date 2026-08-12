@@ -113,6 +113,22 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const updateUser = async (data) => {
+    setLoading(true);
+    try {
+      const response = await userApi.patch("/me", data);
+      if (response.status === 200) {
+        setUser(response.data.user);
+      }
+      setLoading(false);
+      return response.data;
+    } catch (err) {
+      console.error("Update profile failed:", err);
+      setLoading(false);
+      throw err;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -123,6 +139,7 @@ const AuthProvider = ({ children }) => {
     logoutUser,
     sendOtp,
     verifyOtp,
+    updateUser,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
