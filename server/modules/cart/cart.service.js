@@ -4,17 +4,32 @@ import { AppError } from "../../utils/AppError.js";
 
 // Get cart for a user (populated with product details)
 export const getCart = async (userId) => {
-  const cart = await Cart.findOne({ user: userId }).populate(
+  let cart = await Cart.findOne({ user: userId }).populate(
     "products.product",
-    "title price imageUrl stock"
+    "title price imageUrl stock description tags"
   );
 
   // Return empty cart shape if none exists yet
   if (!cart) {
-    return { user: userId, products: [], total: 0 };
+    return {
+      user: userId,
+      products: [],
+      subtotal: 0,
+      gst: 0,
+      deliveryFee: 0,
+      total: 0,
+      grandTotal: 0,
+      totalItems: 0,
+    };
   }
 
-  return _withTotal(cart);
+  // Ensure calculations are synced
+  if (cart.subtotal === undefined) {
+    await cart.save();
+    await cart.populate("products.product", "title price imageUrl stock description tags");
+  }
+
+  return cart;
 };
 
 // Add a product to the cart (or increment qty if already present)
@@ -27,10 +42,11 @@ export const addToCart = async (userId, productId, quantity = 1) => {
   let cart = await Cart.findOne({ user: userId });
 
   if (!cart) {
-    cart = await Cart.create({
+    cart = new Cart({
       user: userId,
       products: [{ product: productId, quantity }],
     });
+    await cart.save();
   } else {
     const existing = cart.products.find(
       (p) => p.product.toString() === productId
@@ -48,8 +64,8 @@ export const addToCart = async (userId, productId, quantity = 1) => {
     await cart.save();
   }
 
-  await cart.populate("products.product", "title price imageUrl stock");
-  return _withTotal(cart);
+  await cart.populate("products.product", "title price imageUrl stock description tags");
+  return cart;
 };
 
 // Update quantity of a specific item (set to 0 to remove)
@@ -76,8 +92,8 @@ export const updateCartItem = async (userId, productId, quantity) => {
   }
 
   await cart.save();
-  await cart.populate("products.product", "title price imageUrl stock");
-  return _withTotal(cart);
+  await cart.populate("products.product", "title price imageUrl stock description tags");
+  return cart;
 };
 
 // Remove a product from the cart entirely
@@ -94,8 +110,8 @@ export const removeFromCart = async (userId, productId) => {
     throw new AppError("Item not found in cart", 404);
 
   await cart.save();
-  await cart.populate("products.product", "title price imageUrl stock");
-  return _withTotal(cart);
+  await cart.populate("products.product", "title price imageUrl stock description tags");
+  return cart;
 };
 
 // Clear the entire cart
@@ -105,15 +121,5 @@ export const clearCart = async (userId) => {
 
   cart.products = [];
   await cart.save();
-  return { user: userId, products: [], total: 0 };
-};
-
-// ─── Internal helper ─────────────────────────────────────────────────────────
-const _withTotal = (cart) => {
-  const total = cart.products.reduce((sum, item) => {
-    const price = item.product?.price ?? 0;
-    return sum + price * item.quantity;
-  }, 0);
-
-  return { ...cart.toObject(), total };
+  return cart;
 };

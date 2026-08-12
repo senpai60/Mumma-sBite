@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "../ui/ThemeToggle";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
+import { useCartContext } from "../../context/CartContext";
 import AddProductModal from "./AddProductModal";
 
 const ICON_SIZE = 16;
@@ -25,12 +26,12 @@ const navLinksIconButtonData = [
   },
 ];
 
-const NavIconButton = ({ to, Icon, label, isActive }) => {
+const NavIconButton = ({ to, Icon, label, isActive, badgeCount }) => {
   return (
     <Link
       to={to}
       aria-label={label}
-      className={`inline-flex items-center justify-center rounded-lg border px-2.5 py-2
+      className={`relative inline-flex items-center justify-center rounded-lg border px-2.5 py-2
         transition-colors
         ${
           isActive
@@ -39,6 +40,11 @@ const NavIconButton = ({ to, Icon, label, isActive }) => {
         }`}
     >
       <Icon size={ICON_SIZE} />
+      {badgeCount > 0 && (
+        <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[0.6rem] font-bold text-white shadow-xs">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      )}
     </Link>
   );
 };
@@ -46,7 +52,10 @@ const NavIconButton = ({ to, Icon, label, isActive }) => {
 export default function Navbar() {
   const location = useLocation();
   const { user } = useAuth();
+  const { cart } = useCartContext();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const cartItemCount = cart?.totalItems || 0;
 
   return (
     <>
@@ -83,6 +92,7 @@ export default function Navbar() {
               const isActive =
                 location.pathname === link ||
                 location.pathname.startsWith(link + "/");
+              const badgeCount = link === "/cart" ? cartItemCount : 0;
 
               return (
                 <NavIconButton
@@ -91,6 +101,7 @@ export default function Navbar() {
                   Icon={Icon}
                   label={label}
                   isActive={isActive}
+                  badgeCount={badgeCount}
                 />
               );
             })}

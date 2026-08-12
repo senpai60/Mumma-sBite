@@ -1,135 +1,145 @@
-import { useMemo, useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import CartItem from "../components/cart/CartItem";
 import CartSummary from "../components/cart/CartSummary";
-
-const initialCart = [
-  {
-    id: 1,
-    title: "Hazelnut Crunch Chocolates",
-    note: "Box of 12 · Gift wrap included",
-    tag: "Top Recipe",
-    price: 399,
-    quantity: 1,
-    image: "https://images.pexels.com/photos/4109992/pexels-photo-4109992.jpeg",
-  },
-  {
-    id: 2,
-    title: "Classic Fudge Brownies",
-    note: "Pack of 6 · Extra gooey",
-    tag: "Best Seller",
-    price: 349,
-    quantity: 2,
-    image: "https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg",
-  },
-];
+import { useCartContext } from "../context/CartContext";
+import LoaderPrimary from "../components/ui/LoaderPrimary";
 
 function CartPage() {
-  const [cart, setCart] = useState(initialCart);
+  const navigate = useNavigate();
+  const { cart, loading, fetchCart, updateCartItem, deleteCartItem, clearCart } =
+    useCartContext();
 
-  const subtotal = useMemo(
-    () =>
-      cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
-    [cart]
-  );
+  useEffect(() => {
+    if (!cart) {
+      fetchCart();
+    }
+  }, [cart]);
 
-  const deliveryFee = cart.length > 0 ? 49 : 0; // demo
-  const discount = subtotal > 1000 ? 100 : 0; // demo rule
+  const products = cart?.products || [];
+  const subtotal = cart?.subtotal || 0;
+  const gst = cart?.gst || 0;
+  const deliveryFee = cart?.deliveryFee || 0;
+  const total = cart?.total ?? cart?.grandTotal ?? 0;
+  const totalItems = cart?.totalItems ?? products.length;
 
-  const handleIncrement = (id) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    );
+  const handleIncrement = (productId, currentQuantity) => {
+    updateCartItem(productId, currentQuantity + 1);
   };
 
-  const handleDecrement = (id) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id && item.quantity > 1
-          ? { ...item, quantity: item.quantity - 1 }
-          : item
-      )
-    );
+  const handleDecrement = (productId, currentQuantity) => {
+    if (currentQuantity > 1) {
+      updateCartItem(productId, currentQuantity - 1);
+    }
   };
 
-  const handleRemove = (id) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
+  const handleRemove = (productId) => {
+    deleteCartItem(productId);
+  };
+
+  const handleClearCart = () => {
+    if (window.confirm("Are you sure you want to clear your cart?")) {
+      clearCart();
+    }
   };
 
   const handleCheckout = () => {
-    // later: navigate to /checkout etc.
-    console.log("Proceeding to checkout with:", cart);
-    alert("Checkout flow not wired yet, this is just UI 😊");
+    console.log("Proceeding to checkout with backend cart:", cart);
+    alert("Checkout flow ready for integration! Total amount: ₹" + total);
   };
 
   const handleContinueShopping = () => {
-    // later: navigate to /menu or /
-    console.log("Go back to products");
+    navigate("/");
   };
 
   return (
     <main className="bg-bg text-text min-h-[70vh] px-4 py-8 sm:px-6 md:px-12">
       <div className="mx-auto max-w-6xl space-y-6">
         {/* Back / title */}
-        <button
-          onClick={handleContinueShopping}
-          className="inline-flex items-center gap-2 text-xs sm:text-sm text-text-light hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Continue browsing
-        </button>
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleContinueShopping}
+            className="inline-flex items-center gap-2 text-xs sm:text-sm text-text-light hover:text-primary transition-colors cursor-pointer"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Continue browsing
+          </button>
 
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
-          {/* Left: Items */}
-          <div className="flex-1 space-y-3">
-            <h1 className="font-display text-2xl sm:text-3xl">
-              Your Cart
-            </h1>
-            <p className="font-sans text-xs sm:text-sm text-text-light mb-2">
-              {cart.length === 0
-                ? "Your cart is empty. Add some treats from Mumma's Bite!"
-                : `You have ${cart.length} item${
-                    cart.length > 1 ? "s" : ""
-                  } in your cart.`}
-            </p>
-
-            {cart.length === 0 ? (
-              <div className="bg-surface border border-border rounded-[var(--radius-card)] p-6 text-center text-sm text-text-light">
-                Start with our{" "}
-                <span className="font-medium text-primary">
-                  Top Recipes of the Month
-                </span>{" "}
-                or browse categories to fill your cart.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {cart.map((item) => (
-                  <CartItem
-                    key={item.id}
-                    item={item}
-                    onIncrement={handleIncrement}
-                    onDecrement={handleDecrement}
-                    onRemove={handleRemove}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Summary */}
-          <div className="lg:w-[320px] xl:w-[360px] flex-shrink-0">
-            <CartSummary
-              subtotal={subtotal}
-              deliveryFee={deliveryFee}
-              discount={discount}
-              onCheckout={handleCheckout}
-            />
-          </div>
+          {products.length > 0 && (
+            <button
+              onClick={handleClearCart}
+              className="inline-flex items-center gap-1.5 text-xs text-text-light hover:text-accent transition-colors cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              Clear Cart
+            </button>
+          )}
         </div>
+
+        {loading && !cart ? (
+          <div className="flex items-center justify-center py-24">
+            <LoaderPrimary />
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 lg:flex-row lg:items-start">
+            {/* Left: Items */}
+            <div className="flex-1 space-y-3">
+              <h1 className="font-display text-2xl sm:text-3xl">
+                Your Cart
+              </h1>
+              <p className="font-sans text-xs sm:text-sm text-text-light mb-2">
+                {products.length === 0
+                  ? "Your cart is empty. Add some treats from Mumma's Bite!"
+                  : `You have ${totalItems} item${
+                      totalItems > 1 ? "s" : ""
+                    } in your cart.`}
+              </p>
+
+              {products.length === 0 ? (
+                <div className="bg-surface border border-border rounded-[var(--radius-card)] p-8 text-center text-sm text-text-light space-y-3">
+                  <p>
+                    Start with our{" "}
+                    <span className="font-medium text-primary">
+                      Top Recipes of the Month
+                    </span>{" "}
+                    or browse categories to fill your cart.
+                  </p>
+                  <button
+                    onClick={handleContinueShopping}
+                    className="inline-flex items-center gap-2 rounded-xl bg-primary text-white text-xs font-medium px-4 py-2 hover:opacity-90 transition-opacity cursor-pointer"
+                  >
+                    Explore Treats
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {products.map((item) => (
+                    <CartItem
+                      key={item._id || item.product?._id}
+                      item={item}
+                      onIncrement={handleIncrement}
+                      onDecrement={handleDecrement}
+                      onRemove={handleRemove}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Right: Summary */}
+            <div className="lg:w-[320px] xl:w-[360px] flex-shrink-0">
+              <CartSummary
+                subtotal={subtotal}
+                gst={gst}
+                deliveryFee={deliveryFee}
+                total={total}
+                onCheckout={handleCheckout}
+                disabled={products.length === 0}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

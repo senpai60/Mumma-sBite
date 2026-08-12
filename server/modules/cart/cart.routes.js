@@ -13,10 +13,10 @@ const router = Router();
 // All cart routes require authentication
 router.use(protect);
 
-router.get("/", getCart);              // GET  /cart
-router.post("/items", addToCart);      // POST /cart/items
-router.patch("/items/:productId", updateCartItem);  // PATCH /cart/items/:productId
+router.get("/", getCart); // GET  /cart
+router.post("/items", addToCart); // POST /cart/items
+router.patch("/items/:productId", updateCartItem); // PATCH /cart/items/:productId
 router.delete("/items/:productId", removeFromCart); // DELETE /cart/items/:productId
-router.delete("/", clearCart);         // DELETE /cart
+router.delete("/", clearCart); // DELETE /cart
 
 export default router;

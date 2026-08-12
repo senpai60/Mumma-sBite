@@ -1,7 +1,13 @@
 // src/components/ProductCard.jsx
-import { Heart, ShoppingBag, Star } from "lucide-react";
+import { useState } from "react";
+import { Heart, ShoppingBag, Star, Check, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { useCartContext } from "../../context/CartContext";
 
 function ProductCard({
+  id,
+  _id,
   title,
   description,
   price,
@@ -9,10 +15,37 @@ function ProductCard({
   tag,
   rating = 4.8,
 }) {
+  const productId = id || _id;
+  const { user } = useAuth();
+  const { addToCart } = useCartContext();
+  const navigate = useNavigate();
+
+  const [adding, setAdding] = useState(false);
+  const [added, setAdded] = useState(false);
+
   const IMAGEKIT_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || "";
   const displayImage = image && !image.startsWith("http") && IMAGEKIT_ENDPOINT
     ? `${IMAGEKIT_ENDPOINT.replace(/\/$/, "")}/${image.replace(/^\//, "")}`
     : image;
+
+  const handleAddToCart = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    if (!productId) return;
+
+    try {
+      setAdding(true);
+      await addToCart(productId, 1);
+      setAdded(true);
+      setTimeout(() => setAdded(false), 2000);
+    } catch (err) {
+      console.error("Failed to add product to cart:", err);
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <div className="group bg-surface border border-border rounded-[var(--radius-card)] overflow-hidden shadow-[var(--shadow-soft)] flex flex-col">
@@ -62,9 +95,28 @@ function ProductCard({
             </span>
           </div>
 
-          <button className="inline-flex items-center gap-1 rounded-lg bg-primary text-white text-[0.7rem] sm:text-xs font-medium px-3 py-1.5 hover:opacity-90 transition-opacity">
-            <ShoppingBag className="h-3.5 w-3.5" strokeWidth={1.8} />
-            Add
+          <button
+            onClick={handleAddToCart}
+            disabled={adding}
+            className={`inline-flex items-center gap-1 rounded-lg text-[0.7rem] sm:text-xs font-medium px-3 py-1.5 transition-all cursor-pointer ${
+              added
+                ? "bg-green-600 text-white"
+                : "bg-primary text-white hover:opacity-90"
+            }`}
+          >
+            {adding ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : added ? (
+              <>
+                <Check className="h-3.5 w-3.5" strokeWidth={2} />
+                Added
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="h-3.5 w-3.5" strokeWidth={1.8} />
+                Add
+              </>
+            )}
           </button>
         </div>
       </div>
