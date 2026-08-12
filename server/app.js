@@ -16,7 +16,9 @@ import { errorHandler } from "./middlewares/error.middleware.js";
 import { corsOptions } from "./config/corsOptions.config.js";
 
 import indexRouter from "./routes/index.js";
-import usersRouter from "./routes/users.routes.js";
+import authRouter from "./modules/auth/auth.routes.js";
+import userRouter from "./modules/user/user.routes.js";
+import cartRouter from "./modules/cart/cart.routes.js";
 
 const app = express();
 
@@ -30,6 +32,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/users", usersRouter);
+app.use("/auth", authRouter);
+app.use("/users", userRouter);
+app.use("/cart", cartRouter);
 
 export default app;

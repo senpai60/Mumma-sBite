@@ -1,8 +1,8 @@
 import { useContext, createContext, useState, useEffect } from "react";
-import { authApi } from "../api/authApi";
+import { authApi, userApi } from "../api/authApi";
 
 const AuthContext = createContext(null);
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:3000";
+const SERVER_URL = import.meta.env.VITE_SERVER_URI || "http://localhost:3000";
 const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -30,13 +30,13 @@ const AuthProvider = ({ children }) => {
 
   // React / plain JS
   const googleLogin = () => {
-    return (window.location.href = `${SERVER_URL}/users/google`); // backend URL
+    return (window.location.href = `${SERVER_URL}/auth/google`);
   };
 
   const verifyUser = async () => {
     setLoading(true);
     try {
-      const response = await authApi.get("/me");
+      const response = await userApi.get("/me");
       if (response.status === 200) {
         setUser(response.data.user);
       }
