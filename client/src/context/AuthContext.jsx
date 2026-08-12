@@ -83,6 +83,36 @@ const AuthProvider = ({ children }) => {
     }
   };
 
+  const sendOtp = async (phone) => {
+    setLoading(true);
+    try {
+      await authApi.post("/otp/send", { phone });
+      setLoading(false);
+      return true;
+    } catch (err) {
+      console.error("Send OTP failed:", err);
+      setLoading(false);
+      throw err;
+    }
+  };
+
+  const verifyOtp = async (phone, otp, name) => {
+    setLoading(true);
+    try {
+      const response = await authApi.post("/otp/verify", { phone, otp, name });
+      if (response.status === 200) {
+        setUser(response.data.user);
+      }
+      await verifyUser();
+      setLoading(false);
+      return true;
+    } catch (err) {
+      console.error("Verify OTP failed:", err);
+      setLoading(false);
+      throw err;
+    }
+  };
+
   const value = {
     user,
     loading,
@@ -91,6 +121,8 @@ const AuthProvider = ({ children }) => {
     verifyUser,
     signupUser,
     logoutUser,
+    sendOtp,
+    verifyOtp,
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

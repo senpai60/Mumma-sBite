@@ -3,6 +3,7 @@ import OtpToken from "../../models/OtpToken.model.js";
 import User from "../../models/User.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { logger } from "../../config/logger.config.js";
+import { sendSms } from "../../config/sms.config.js";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -22,9 +23,10 @@ export const sendOtp = async ({ phone, email }) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  // TODO: integrate SMS / email provider here
-  logger.info(`OTP generated for ${phone || email}`);
-  console.log(`[DEV] OTP for ${phone || email} => ${otp}`);
+  // Send OTP via SMS (Fast2SMS)
+  await sendSms(phone, otp);
+
+  logger.info(`OTP sent to ${phone || email}`);
 
   return true;
 };

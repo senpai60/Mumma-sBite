@@ -1,0 +1,13 @@
+{
+  "watch": ["."],
+  "ext": "js,mjs,cjs,json",
+  "ignore": [
+    "node_modules/",
+    ".wwebjs_auth/",
+    ".wwebjs_cache/",
+    "src/logs/",
+    "src/public/",
+    "public/"
+  ],
+  "exec": "node ./bin/www"
+}

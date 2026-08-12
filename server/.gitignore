@@ -2,3 +2,5 @@
 node_modules/
 src/logs
 src/public
+.wwebjs_auth/
+.wwebjs_cache/

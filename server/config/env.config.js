@@ -17,4 +17,6 @@ export const ENV_CONFIG = {
     COOKIE_SECURE: process.env.COOKIE_SECURE === 'true',
 
     NODE_ENV: process.env.NODE_ENV || "development",
+
+    FAST2SMS_API_KEY: process.env.FAST2SMS_API_KEY,
 }

@@ -1,25 +1,53 @@
-import { Client } from "whatsapp-web.js";
-import { generate } from "qrcode-terminal";
+import wwjs from "whatsapp-web.js";
+const { Client, LocalAuth } = wwjs;
 
-const whatsappClient = new Client();
+import qrcodePkg from "qrcode-terminal";
+const { generate } = qrcodePkg;
 
-try {
-  whatsappClient.once("ready", () => {
-    console.log("Client is ready!");
+import { logger } from "./logger.config.js";
+
+// LocalAuth persists session in .wwebjs_auth/ so you don't scan QR every restart
+const whatsappClient = new Client({
+  authStrategy: new LocalAuth(),
+  puppeteer: {
+    headless: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  },
+});
+
+whatsappClient.on("qr", (qr) => {
+  logger.info("WhatsApp QR code received — scan with your phone:");
+  generate(qr, { small: true });
+});
+
+whatsappClient.on("authenticated", () => {
+  logger.info("WhatsApp client authenticated ✅");
+});
+
+whatsappClient.on("ready", () => {
+  logger.info("WhatsApp client is ready 📱");
+});
+
+whatsappClient.on("auth_failure", (msg) => {
+  logger.error(`WhatsApp auth failed: ${msg}`);
+});
+
+whatsappClient.on("disconnected", (reason) => {
+  logger.warn(`WhatsApp client disconnected: ${reason}`);
+});
+
+// Call this once at server startup (in app.js or bin/www)
+export const initWhatsapp = () => {
+  whatsappClient.initialize().catch((err) => {
+    logger.error(`WhatsApp initialization error: ${err.message}`);
   });
-  whatsappClient.on("qr", (qr) => {
-    generate(qr, { small: true });
-  });
-  whatsappClient.on("authenticated", () => {
-    console.log("AUTHENTICATED");
-  });
-  try {
-    whatsappClient.initialize();
-  } catch (err) {
-    console.log(err);
-  }
-} catch (error) {
-  console.log(error);
-}
+};
+
+// Helper to send a message — used by OTP service, etc.
+export const sendWhatsappMessage = async (phone, message) => {
+  const chatId = `${phone}@c.us`; // WhatsApp format: countrycode+number@c.us
+  await whatsappClient.sendMessage(chatId, message);
+};
 
 export default whatsappClient;
+
