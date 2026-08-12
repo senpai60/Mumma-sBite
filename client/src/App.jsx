@@ -5,19 +5,13 @@ import Home from "./pages/Home";
 import ProfilePage from "./pages/ProfilePage";
 import AuthPage from "./pages/AuthPage";
 import PaymentPage from "./pages/PaymentPage";
-import { useEffect } from "react";
+
 
 import { useAuth } from "./context/AuthContext";
 
 function App() {
-  const {logoutUser,user} = useAuth();
-  // useEffect(()=>{
-  //   console.log("USER IN APP JSX ===>",user);
-  //   const logout = async() => {
-  //     await logoutUser();
-  //   };
-  //   logout()
-  // },[])
+  const {user} = useAuth();
+  
   return (
     <main className="bg-bg min-h-screen">
       <Navbar />

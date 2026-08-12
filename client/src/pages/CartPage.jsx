@@ -5,7 +5,7 @@ import CartItem from "../components/cart/CartItem";
 import CartSummary from "../components/cart/CartSummary";
 import { useCartContext } from "../context/CartContext";
 import LoaderPrimary from "../components/ui/LoaderPrimary";
-import axios from "axios";
+
 
 function CartPage() {
   const navigate = useNavigate();

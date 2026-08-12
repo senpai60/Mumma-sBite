@@ -1,13 +1,23 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
-import { ArrowLeft, User, Phone, MapPin, AlertCircle, Check } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import {
+  ArrowLeft,
+  User,
+  Phone,
+  MapPin,
+  AlertCircle,
+  Check,
+} from "lucide-react";
 import { useCartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import LoaderPrimary from "../components/ui/LoaderPrimary";
+import axios from "axios";
+
+const BASE = import.meta.env.VITE_SERVER_URI || (import.meta.env.PROD ? "" : "http://localhost:3000");
 
 function PaymentPage() {
   const navigate = useNavigate();
-  const location = useLocation();
+//   const location = useLocation();
   const { user } = useAuth();
   const { cart, loading } = useCartContext();
   const [formData, setFormData] = useState({
@@ -84,19 +94,40 @@ function PaymentPage() {
 
     setIsSubmitting(true);
     try {
-      // Show alert instead of Razorpay integration
-      const orderDetails = `
-Order Confirmation Details:
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-Name: ${formData.fullName}
-Mobile: ${formData.mobile}
-Address: ${formData.address}, ${formData.city}, ${formData.state} - ${formData.zipCode}
+      const res = await axios.post(
+        `${BASE}/api/order/`,
+        {
+          cartId: cart?._id,
+          notes: formData,
+        },
+        { withCredentials: true },
+      );
 
-Order Total: ₹${cart.total}
-━━━━━━━━━━━━━━━━━━━━━━━━━━
-Thank you for your order! Your order has been placed successfully.`;
+      const { order, key_id } = res.data;
+      const notes = order.notes || formData || {};
 
-      alert(orderDetails);
+      const options = {
+        key: key_id,
+        amount: order.amount, // Amount is in currency subunits.
+        currency: order.currency,
+        name: "Mumma's Bite",
+        description: "Food Order Payment",
+        order_id: order.id,
+
+        prefill: {
+          name: notes.fullName || user?.name || "",
+          email: user?.email || "",
+          contact: notes.mobile || "",
+        },
+        theme: {
+          color: "#F37254",
+        },
+        handler: (response) => {
+          alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.open();
 
       // Reset form and navigate
       setTimeout(() => {
@@ -104,7 +135,8 @@ Thank you for your order! Your order has been placed successfully.`;
       }, 1000);
     } catch (error) {
       console.error("Order error:", error);
-      alert("An error occurred while placing your order. Please try again.");
+      const errorMsg = error?.response?.data?.message || "An error occurred while placing your order. Please check Razorpay keys.";
+      alert(errorMsg);
     } finally {
       setIsSubmitting(false);
     }
@@ -315,7 +347,9 @@ Thank you for your order! Your order has been placed successfully.`;
           {/* Order Summary Sidebar */}
           <div className="md:col-span-1">
             <div className="bg-surface border border-border rounded-[var(--radius-card)] p-6 shadow-[var(--shadow-soft)] sticky top-8">
-              <h3 className="font-display text-lg text-text mb-4">Order Summary</h3>
+              <h3 className="font-display text-lg text-text mb-4">
+                Order Summary
+              </h3>
 
               <div className="space-y-3 text-sm text-text-light mb-4">
                 <div className="flex justify-between">
