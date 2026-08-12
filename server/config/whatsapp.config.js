@@ -1,9 +1,7 @@
 import wwjs from "whatsapp-web.js";
 const { Client, LocalAuth } = wwjs;
 
-import qrcodePkg from "qrcode-terminal";
-const { generate } = qrcodePkg;
-
+import QRCode from "qrcode";
 import { logger } from "./logger.config.js";
 
 // LocalAuth persists session in .wwebjs_auth/ so you don't scan QR every restart
@@ -17,7 +15,13 @@ const whatsappClient = new Client({
 
 whatsappClient.on("qr", (qr) => {
   logger.info("WhatsApp QR code received — scan with your phone:");
-  generate(qr, { small: true });
+  QRCode.toString(qr, { type: "terminal", small: true }, (err, url) => {
+    if (err) {
+      console.error("Failed to render QR code:", err);
+    } else {
+      console.log(url);
+    }
+  });
 });
 
 whatsappClient.on("authenticated", () => {
@@ -45,8 +49,13 @@ export const initWhatsapp = () => {
 
 // Helper to send a message — used by OTP service, etc.
 export const sendWhatsappMessage = async (phone, message) => {
-  const chatId = `${phone}@c.us`; // WhatsApp format: countrycode+number@c.us
+  let cleaned = String(phone).replace(/\D/g, "");
+  if (cleaned.length === 10) {
+    cleaned = `91${cleaned}`;
+  }
+  const chatId = `${cleaned}@c.us`; // WhatsApp format: countrycode+number@c.us
   await whatsappClient.sendMessage(chatId, message);
+  logger.info(`WhatsApp OTP message sent to +${cleaned}`);
 };
 
 export default whatsappClient;

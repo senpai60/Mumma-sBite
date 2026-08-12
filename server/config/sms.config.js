@@ -19,21 +19,37 @@ export const sendSms = async (phone, otp) => {
   try {
     const response = await axios.get(FAST2SMS_URL, {
       params: {
-        authorization: ENV_CONFIG.FAST2SMS_API_KEY,
         variables_values: otp,
         route: "otp",
         numbers: phone,
       },
-      headers: { "cache-control": "no-cache" },
+      headers: { 
+        "authorization": ENV_CONFIG.FAST2SMS_API_KEY,
+        "cache-control": "no-cache" 
+      },
     });
 
     if (!response.data?.return) {
-      throw new Error(response.data?.message || "Fast2SMS delivery failed");
+      const msg = Array.isArray(response.data?.message) 
+        ? response.data.message.join(", ") 
+        : response.data?.message || "Fast2SMS delivery failed";
+      throw new Error(msg);
     }
 
     logger.info(`OTP SMS sent to ${phone}`);
   } catch (err) {
-    logger.error(`Failed to send OTP SMS to ${phone}: ${err.message}`);
-    throw err;
+    const responseData = err.response?.data;
+    const detailMsg = responseData?.message 
+      ? (Array.isArray(responseData.message) ? responseData.message.join(", ") : responseData.message)
+      : err.message;
+    
+    logger.warn(`Fast2SMS Notice (${detailMsg}).`);
+    console.log(`\n==================================================`);
+    console.log(`🔑 [DEMO OTP FOR ${phone}]: ${otp}`);
+    console.log(`==================================================\n`);
+    
+    if (ENV_CONFIG.NODE_ENV === "production") {
+      throw new Error(`SMS Provider Error: ${detailMsg}`);
+    }
   }
 };

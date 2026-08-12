@@ -3,7 +3,7 @@ import OtpToken from "../../models/OtpToken.model.js";
 import User from "../../models/User.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { logger } from "../../config/logger.config.js";
-import { sendSms } from "../../config/sms.config.js";
+import { sendWhatsappMessage } from "../../config/whatsapp.config.js";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
@@ -23,10 +23,18 @@ export const sendOtp = async ({ phone, email }) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  // Send OTP via SMS (Fast2SMS)
-  await sendSms(phone, otp);
+  const message = `🍫 *Mumma's Bite*: Your verification code is *${otp}*. Valid for 5 minutes. Do not share with anyone.`;
 
-  logger.info(`OTP sent to ${phone || email}`);
+  try {
+    await sendWhatsappMessage(phone, message);
+  } catch (err) {
+    logger.warn(`WhatsApp message delivery fallback (${err.message})`);
+    console.log(`\n==================================================`);
+    console.log(`🔑 [DEMO OTP FOR ${phone}]: ${otp}`);
+    console.log(`==================================================\n`);
+  }
+
+  logger.info(`OTP generated and sent to ${phone || email}`);
 
   return true;
 };
