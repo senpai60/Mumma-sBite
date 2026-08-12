@@ -66,7 +66,7 @@ const orderSchema = new mongoose.Schema(
       index: true,
     },
 
-    items: {
+    products: {
       type: [orderItemSchema],
       required: true,
     },
