@@ -8,6 +8,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@imagekit/nodejs": "^7.10.0",
     "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
     "cookie-parser": "~1.4.4",

@@ -25,11 +25,6 @@ export const getSingleProduct = async (req, res, next) => {
   }
 };
 
-
-
-
-// INJECTIONS //
-
 const products = [
   {
     title: "Hazelnut Crunch Chocolates",
@@ -122,10 +117,17 @@ const products = [
     stock: 50,
   },
 ];
+
 export const injectProducts = async (req, res, next) => {
-    try {
-        const insertedProducts = await Product.insertMany(products);
-    } catch (err) {
-        next(err)
-    }
-}
+  try {
+    const insertedProducts = await productService.injectProducts(products);
+    res.status(201).json({
+      success: true,
+      message: "Products injected successfully",
+      count: insertedProducts.length,
+      data: insertedProducts,
+    });
+  } catch (err) {
+    next(err);
+  }
+};

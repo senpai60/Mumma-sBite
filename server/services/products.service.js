@@ -1,8 +1,8 @@
-import { Product } from "../models/Product.model.js";
+import Product from "../models/Product.model.js";
 import { AppError } from "../utils/AppError.js";
 
 export const getProducts = async () => {
-  const products = await Product.find();
+  const products = await Product.find().populate("category");
   if (!products) {
     throw new AppError("No products found", 404);
   }
@@ -10,8 +10,7 @@ export const getProducts = async () => {
 };
 
 export const getSingleProduct = async (productId) => {
-  const { productId } = req.params;
-  const product = await Product.findById(productId);
+  const product = await Product.findById(productId).populate("category");
   if (!product) {
     throw new AppError("Product not found", 404);
   }
@@ -19,5 +18,6 @@ export const getSingleProduct = async (productId) => {
 };
 
 export const injectProducts = async (productsArr) => {
-  for (const productData of productsArr) {}
+  const inserted = await Product.insertMany(productsArr);
+  return inserted;
 };

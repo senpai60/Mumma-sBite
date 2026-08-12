@@ -19,6 +19,7 @@ import indexRouter from "./routes/index.js";
 import authRouter from "./modules/auth/auth.routes.js";
 import userRouter from "./modules/user/user.routes.js";
 import cartRouter from "./modules/cart/cart.routes.js";
+import productsRouter from "./routes/products.routes.js";
 
 const app = express();
 
@@ -35,5 +36,6 @@ app.use("/", indexRouter);
 app.use("/auth", authRouter);
 app.use("/users", userRouter);
 app.use("/cart", cartRouter);
+app.use("/products", productsRouter);
 
 export default app;

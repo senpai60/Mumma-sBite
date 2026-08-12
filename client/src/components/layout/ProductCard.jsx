@@ -9,12 +9,17 @@ function ProductCard({
   tag,
   rating = 4.8,
 }) {
+  const IMAGEKIT_ENDPOINT = import.meta.env.VITE_IMAGEKIT_URL_ENDPOINT || "";
+  const displayImage = image && !image.startsWith("http") && IMAGEKIT_ENDPOINT
+    ? `${IMAGEKIT_ENDPOINT.replace(/\/$/, "")}/${image.replace(/^\//, "")}`
+    : image;
+
   return (
     <div className="group bg-surface border border-border rounded-[var(--radius-card)] overflow-hidden shadow-[var(--shadow-soft)] flex flex-col">
       {/* Image */}
       <div className="relative overflow-hidden">
         <img
-          src={image}
+          src={displayImage}
           alt={title}
           className="h-44 w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
