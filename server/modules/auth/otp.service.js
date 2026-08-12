@@ -1,11 +1,34 @@
 import crypto from "crypto";
+import axios from "axios";
 import OtpToken from "../../models/OtpToken.model.js";
 import User from "../../models/User.model.js";
 import { AppError } from "../../utils/AppError.js";
 import { logger } from "../../config/logger.config.js";
-import { sendWhatsappMessage } from "../../config/whatsapp.config.js";
+import { ENV_CONFIG } from "../../config/env.config.js";
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Send OTP via Fast2SMS
+const sendFast2SmsOtp = async (phone, otp) => {
+  try {
+    const response = await axios.post(
+      "https://www.fast2sms.com/dev/bulkV2",
+      {
+        variables_values: otp,
+        route: "otp",
+        numbers: String(phone).replace(/\D/g, "").slice(-10), // format strictly to 10 digits
+      },
+      {
+        headers: {
+          authorization: ENV_CONFIG.FAST2SMS_API_KEY,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || error.message);
+  }
+};
 
 // Send OTP (phone or email based)
 export const sendOtp = async ({ phone, email }) => {
@@ -23,18 +46,19 @@ export const sendOtp = async ({ phone, email }) => {
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 
-  const message = `🍫 *Mumma's Bite*: Your verification code is *${otp}*. Valid for 5 minutes. Do not share with anyone.`;
-
   try {
-    await sendWhatsappMessage(phone, message);
+    if (ENV_CONFIG.FAST2SMS_API_KEY) {
+      await sendFast2SmsOtp(phone, otp);
+      logger.info(`Fast2SMS OTP sent to ${phone}`);
+    } else {
+      throw new Error("FAST2SMS_API_KEY is not configured");
+    }
   } catch (err) {
-    logger.warn(`WhatsApp message delivery fallback (${err.message})`);
+    logger.warn(`SMS delivery failed (${err.message}) - Check your API key credits!`);
     console.log(`\n==================================================`);
     console.log(`🔑 [DEMO OTP FOR ${phone}]: ${otp}`);
     console.log(`==================================================\n`);
   }
-
-  logger.info(`OTP generated and sent to ${phone || email}`);
 
   return true;
 };
