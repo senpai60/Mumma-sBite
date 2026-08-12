@@ -14,8 +14,9 @@ const sendFast2SmsOtp = async (phone, otp) => {
     const response = await axios.post(
       "https://www.fast2sms.com/dev/bulkV2",
       {
-        variables_values: otp,
-        route: "otp",
+        message: `Your Mumma's Bite verification code is ${otp}. Valid for 5 minutes.`,
+        language: "english",
+        route: "q",
         numbers: String(phone).replace(/\D/g, "").slice(-10), // format strictly to 10 digits
       },
       {
