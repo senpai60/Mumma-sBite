@@ -127,7 +127,7 @@ export default function AuthPage() {
       await sendOtp(digits);
       setOtpStep("otp");
     } catch (err) {
-      setOtpError(err?.response?.data?.message || "Failed to send OTP. Try again.");
+      setOtpError(err?.message || err?.response?.data?.message || "Failed to send OTP. Try again.");
     } finally {
       setOtpLoading(false);
     }
@@ -145,7 +145,7 @@ export default function AuthPage() {
       await verifyOtp(otpPhone.replace(/\D/g, ""), otpCode, otpName);
       setOtpStep(null);
     } catch (err) {
-      setOtpError(err?.response?.data?.message || "Invalid OTP. Please try again.");
+      setOtpError(err?.message || err?.response?.data?.message || "Invalid OTP. Please try again.");
     } finally {
       setOtpLoading(false);
     }

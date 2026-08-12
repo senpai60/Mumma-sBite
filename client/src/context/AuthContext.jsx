@@ -88,18 +88,20 @@ const AuthProvider = ({ children }) => {
   const sendOtp = async (phone, containerId = "recaptcha-container") => {
     setLoading(true);
     try {
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
-          size: "invisible",
-          callback: () => {},
-          "expired-callback": () => {
-            if (window.recaptchaVerifier) {
-              window.recaptchaVerifier.clear();
-              window.recaptchaVerifier = null;
-            }
-          }
-        });
+      if (window.recaptchaVerifier) {
+        try { window.recaptchaVerifier.clear(); } catch (_) {}
+        window.recaptchaVerifier = null;
       }
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+        size: "invisible",
+        callback: () => {},
+        "expired-callback": () => {
+          if (window.recaptchaVerifier) {
+            try { window.recaptchaVerifier.clear(); } catch (_) {}
+            window.recaptchaVerifier = null;
+          }
+        }
+      });
       const formattedPhone = phone.startsWith("+") ? phone : `+91${phone.replace(/\D/g, "")}`;
       const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
       window.confirmationResult = confirmationResult;
