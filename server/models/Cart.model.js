@@ -21,7 +21,7 @@ const cartSchema = new mongoose.Schema(
     grandTotal: { type: Number, default: 0 },
     totalItems: { type: Number, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 cartSchema.pre("save", async function () {
@@ -33,7 +33,10 @@ cartSchema.pre("save", async function () {
 
     for (const item of this.products) {
       if (!item.product) continue;
-      if (typeof item.product === "object" && item.product.price !== undefined) {
+      if (
+        typeof item.product === "object" &&
+        item.product.price !== undefined
+      ) {
         const itemPrice = Number(item.product.price) || 0;
         item.lineTotal = itemPrice * item.quantity;
         subtotal += item.lineTotal;
@@ -45,11 +48,18 @@ cartSchema.pre("save", async function () {
 
     if (unpopulatedIds.length > 0) {
       const Product = mongoose.model("Product");
-      const fetchedProducts = await Product.find({ _id: { $in: unpopulatedIds } }).select("price");
-      const priceMap = new Map(fetchedProducts.map((p) => [p._id.toString(), p.price]));
+      const fetchedProducts = await Product.find({
+        _id: { $in: unpopulatedIds },
+      }).select("price");
+      const priceMap = new Map(
+        fetchedProducts.map((p) => [p._id.toString(), p.price]),
+      );
 
       for (const item of this.products) {
-        if (item.product && (typeof item.product !== "object" || item.product.price === undefined)) {
+        if (
+          item.product &&
+          (typeof item.product !== "object" || item.product.price === undefined)
+        ) {
           const prodIdStr = item.product.toString();
           const price = priceMap.get(prodIdStr) || 0;
           item.lineTotal = price * item.quantity;
@@ -60,7 +70,7 @@ cartSchema.pre("save", async function () {
     }
   }
 
-  const gst = Math.round(subtotal * 0.05 * 100) / 100;
+  const gst = Math.round(subtotal * 0.18 * 100) / 100;
   const deliveryFee = subtotal > 0 ? (subtotal >= 1000 ? 0 : 49) : 0;
   const grandTotal = Math.round((subtotal + gst + deliveryFee) * 100) / 100;
 
