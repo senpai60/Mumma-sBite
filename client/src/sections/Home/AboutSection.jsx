@@ -8,7 +8,7 @@ export default function AboutSection() {
           
           {/* main story image */}
           <img
-            src="https://i.pinimg.com/1200x/35/2d/b6/352db660218d5de780ddac393dfe8f05.jpg"
+            src="https://ik.imagekit.io/1kfz2qqkfp/Mumma'sBakery%20Client/mumma-bakery-retro.png"
             alt="Mumma's Bite kitchen"
             className="w-full h-full object-cover object-center opacity-[0.92]"
           />

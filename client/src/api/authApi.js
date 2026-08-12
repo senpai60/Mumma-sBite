@@ -2,14 +2,14 @@ import axios from "axios";
 
 const BASE = import.meta.env.VITE_SERVER_URI || "http://localhost:3000";
 
-// Auth endpoints: /auth/login, /auth/register, /auth/logout, /auth/otp/*
+// Auth endpoints: /api/auth/login, /api/auth/register, /api/auth/logout, /api/auth/otp/*
 export const authApi = axios.create({
-  baseURL: `${BASE}/auth`,
+  baseURL: `${BASE}/api/auth`,
   withCredentials: true,
 });
 
-// User profile endpoints: /users/me
+// User profile endpoints: /api/users/me
 export const userApi = axios.create({
-  baseURL: `${BASE}/users`,
+  baseURL: `${BASE}/api/users`,
   withCredentials: true,
 });

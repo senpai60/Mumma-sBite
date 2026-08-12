@@ -1,47 +1,66 @@
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import Category from "../models/Category.model.js";
 import Product from "../models/Product.model.js";
 import { logger } from "../config/logger.config.js";
+import imagekit from "./imagekit.util.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const imagesDir = path.join(__dirname, "../product-image");
 
 const categoriesData = [
   {
     name: "Handmade Chocolates",
     slug: "handmade-chocolates",
-    description: "Soft-centered, nutty, dark, milk – sab yahan. Perfect for everyday cravings.",
+    description:
+      "Soft-centered, nutty, dark, milk – sab yahan. Perfect for everyday cravings.",
     badge: "Most Loved",
-    imageUrl: "https://images.pexels.com/photos/4109992/pexels-photo-4109992.jpeg",
+    imageUrl:
+      "https://images.pexels.com/photos/4109992/pexels-photo-4109992.jpeg",
   },
   {
     name: "Brownies & Bars",
     slug: "brownies-bars",
-    description: "Gooey, fudgy, crispy top brownies – weekend binge ke liye ideal.",
+    description:
+      "Gooey, fudgy, crispy top brownies – weekend binge ke liye ideal.",
     badge: "Bestseller",
-    imageUrl: "https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg",
+    imageUrl:
+      "https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg",
   },
   {
     name: "Gift Hampers",
     slug: "gift-hampers",
-    description: "Curated boxes with chocolates, notes and more. Ready-to-gift options.",
+    description:
+      "Curated boxes with chocolates, notes and more. Ready-to-gift options.",
     badge: "Perfect for gifting",
-    imageUrl: "https://images.pexels.com/photos/4110000/pexels-photo-4110000.jpeg",
+    imageUrl:
+      "https://images.pexels.com/photos/4110000/pexels-photo-4110000.jpeg",
   },
   {
     name: "Cookies & Bites",
     slug: "cookies-bites",
     description: "Crispy, chewy, nutty – har mood ke liye ek cookie.",
-    imageUrl: "https://images.pexels.com/photos/8275138/pexels-photo-8275138.jpeg",
+    imageUrl:
+      "https://images.pexels.com/photos/8275138/pexels-photo-8275138.jpeg",
   },
   {
     name: "Dark Collection",
     slug: "dark-collection",
-    description: "High cocoa %, low sugar. Bitter-sweet lovers ke liye special range.",
-    imageUrl: "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
+    description:
+      "High cocoa %, low sugar. Bitter-sweet lovers ke liye special range.",
+    imageUrl:
+      "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
   },
   {
     name: "Custom Boxes",
     slug: "custom-boxes",
-    description: "Mix & match your favourites and add a personal note inside.",
+    description:
+      "Mix & match your favourites and add a personal note inside.",
     badge: "Build your own",
-    imageUrl: "https://images.pexels.com/photos/918328/pexels-photo-918328.jpeg",
+    imageUrl:
+      "https://images.pexels.com/photos/918328/pexels-photo-918328.jpeg",
   },
 ];
 
@@ -52,7 +71,9 @@ const productsData = [
     price: 399,
     categorySlug: "handmade-chocolates",
     tags: ["Top Recipe"],
-    imageUrl: "https://images.pexels.com/photos/4109992/pexels-photo-4109992.jpeg",
+    imageFile: "hazelnut-crunch.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/4109992/pexels-photo-4109992.jpeg",
     stock: 50,
   },
   {
@@ -61,7 +82,9 @@ const productsData = [
     price: 349,
     categorySlug: "brownies-bars",
     tags: ["Best Seller"],
-    imageUrl: "https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg",
+    imageFile: "classic-fudge-browniejpg",
+    imageUrl:
+      "https://images.pexels.com/photos/4109993/pexels-photo-4109993.jpeg",
     stock: 50,
   },
   {
@@ -70,7 +93,9 @@ const productsData = [
     price: 429,
     categorySlug: "handmade-chocolates",
     tags: ["New"],
-    imageUrl: "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
+    imageFile: "almond-rocher-bites.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
     stock: 50,
   },
   {
@@ -79,7 +104,9 @@ const productsData = [
     price: 459,
     categorySlug: "handmade-chocolates",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/918328/pexels-photo-918328.jpeg",
+    imageFile: "strawberry-truffle-box.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/918328/pexels-photo-918328.jpeg",
     stock: 50,
   },
   {
@@ -88,7 +115,9 @@ const productsData = [
     price: 379,
     categorySlug: "handmade-chocolates",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/6062042/pexels-photo-6062042.jpeg",
+    imageFile: "caramel-filled-bites.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/6062042/pexels-photo-6062042.jpeg",
     stock: 50,
   },
   {
@@ -97,7 +126,9 @@ const productsData = [
     price: 699,
     categorySlug: "gift-hampers",
     tags: ["Limited"],
-    imageUrl: "https://images.pexels.com/photos/4110000/pexels-photo-4110000.jpeg",
+    imageFile: "mummas-signature-box.png",
+    imageUrl:
+      "https://images.pexels.com/photos/4110000/pexels-photo-4110000.jpeg",
     stock: 50,
   },
   {
@@ -106,7 +137,9 @@ const productsData = [
     price: 449,
     categorySlug: "handmade-chocolates",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/461430/pexels-photo-461430.jpeg",
+    imageFile: "roasted-coffee-truffles.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/461430/pexels-photo-461430.jpeg",
     stock: 50,
   },
   {
@@ -115,7 +148,9 @@ const productsData = [
     price: 429,
     categorySlug: "handmade-chocolates",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/4109994/pexels-photo-4109994.jpeg",
+    imageFile: "pistachio-delight-squares.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/4109994/pexels-photo-4109994.jpeg",
     stock: 50,
   },
   {
@@ -124,7 +159,9 @@ const productsData = [
     price: 389,
     categorySlug: "cookies-bites",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/8275138/pexels-photo-8275138.jpeg",
+    imageFile: "almond-florentine-crisps.jpg",
+    imageUrl:
+      "https://images.pexels.com/photos/8275138/pexels-photo-8275138.jpeg",
     stock: 50,
   },
   {
@@ -133,13 +170,54 @@ const productsData = [
     price: 499,
     categorySlug: "dark-collection",
     tags: [],
-    imageUrl: "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
+    imageFile: "midnight-dark-collection.png",
+    imageUrl:
+      "https://images.pexels.com/photos/461431/pexels-photo-461431.jpeg",
     stock: 50,
   },
 ];
 
+const uploadLocalImage = async (imageFile, defaultUrl) => {
+  if (!imageFile || !imagekit) return defaultUrl;
+
+  const filePath = path.join(imagesDir, imageFile);
+  if (!fs.existsSync(filePath)) {
+    logger.warn(
+      `Local file ${imageFile} not found in ${imagesDir}. Using fallback URL.`
+    );
+    return defaultUrl;
+  }
+
+  try {
+    logger.info(`Uploading ${imageFile} to ImageKit... 🚀`);
+    const fileBase64 = fs.readFileSync(filePath).toString("base64");
+    const uploadRes = await imagekit.files.upload({
+      file: fileBase64,
+      fileName: `seed-${Date.now()}-${imageFile}`,
+      folder: "/products",
+    });
+    logger.info(`Upload complete for ${imageFile}: ${uploadRes.url}`);
+    return uploadRes.url;
+  } catch (err) {
+    logger.error(
+      `Failed to upload ${imageFile} to ImageKit: ${err.message}. Using fallback.`
+    );
+    return defaultUrl;
+  }
+};
+
 export const seedDatabase = async () => {
   try {
+    // Detect old pexels seeds and clear them if we have ImageKit credentials
+    const pexelsProduct = await Product.findOne({ imageUrl: /pexels/ });
+    if (pexelsProduct && imagekit) {
+      logger.info(
+        "Detected old Pexels product URLs. Re-seeding database to upload local images to ImageKit... 🧹"
+      );
+      await Product.deleteMany({});
+      await Category.deleteMany({});
+    }
+
     // 1. Seed Categories if empty
     const categoryCount = await Category.countDocuments();
     if (categoryCount === 0) {
@@ -154,32 +232,43 @@ export const seedDatabase = async () => {
     const productCount = await Product.countDocuments();
     if (productCount === 0) {
       logger.info("Product collection is empty. Seeding products... 🍫");
-      
+
       // Fetch all categories to resolve IDs
       const categories = await Category.find();
       const categoryMap = {};
-      categories.forEach(cat => {
+      categories.forEach((cat) => {
         categoryMap[cat.slug] = cat._id;
       });
 
-      const finalProductsData = productsData.map(prod => {
+      const finalProductsData = [];
+
+      for (const prod of productsData) {
         const catId = categoryMap[prod.categorySlug];
         if (!catId) {
-          throw new Error(`Category slug "${prod.categorySlug}" not found when seeding product "${prod.title}"`);
+          throw new Error(
+            `Category slug "${prod.categorySlug}" not found when seeding product "${prod.title}"`
+          );
         }
-        return {
+
+        // Upload local image to ImageKit if possible, otherwise use fallback
+        const uploadedUrl = await uploadLocalImage(
+          prod.imageFile,
+          prod.imageUrl
+        );
+
+        finalProductsData.push({
           title: prod.title,
           description: prod.description,
           price: prod.price,
           category: catId,
           tags: prod.tags,
-          imageUrl: prod.imageUrl,
-          stock: prod.stock
-        };
-      });
+          imageUrl: uploadedUrl,
+          stock: prod.stock,
+        });
+      }
 
       await Product.insertMany(finalProductsData);
-      logger.info("Successfully seeded products!");
+      logger.info("Successfully seeded products with ImageKit uploads!");
     } else {
       logger.info("Product collection is already populated.");
     }

@@ -33,9 +33,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
-app.use("/auth", authRouter);
-app.use("/users", userRouter);
-app.use("/cart", cartRouter);
-app.use("/products", productsRouter);
+app.use("/api/auth", authRouter);
+app.use("/api/users", userRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/products", productsRouter);
+
+// Catch-all route to serve client-side SPA index.html
+app.get(/.*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 export default app;

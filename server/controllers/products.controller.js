@@ -1,4 +1,7 @@
 import * as productService from "../services/products.service.js";
+import imagekit from "../utils/imagekit.util.js";
+import { AppError } from "../utils/AppError.js";
+import Category from "../models/Category.model.js";
 
 export const getProducts = async (req, res, next) => {
   try {
@@ -19,6 +22,99 @@ export const getSingleProduct = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: product,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getCategories = async (req, res, next) => {
+  try {
+    const categories = await Category.find();
+    res.status(200).json({
+      success: true,
+      data: categories,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createProduct = async (req, res, next) => {
+  try {
+    const { title, description, price, category, tags, stock } = req.body;
+
+    if (!title || !description || !price || !category) {
+      throw new AppError(
+        "Title, description, price, and category are required",
+        400
+      );
+    }
+
+    if (!req.file) {
+      throw new AppError("Product image file is required", 400);
+    }
+
+    if (!imagekit) {
+      throw new AppError(
+        "ImageKit is not configured in backend env variables",
+        500
+      );
+    }
+
+    // Upload to ImageKit
+    let uploadResponse;
+    try {
+      const fileBase64 = req.file.buffer.toString("base64");
+      uploadResponse = await imagekit.files.upload({
+        file: fileBase64,
+        fileName: `product-${Date.now()}-${req.file.originalname.replace(
+          /\s+/g,
+          "-"
+        )}`,
+        folder: "/products",
+      });
+    } catch (uploadErr) {
+      throw new AppError(
+        `Failed to upload image to ImageKit: ${uploadErr.message}`,
+        500
+      );
+    }
+
+    const imageUrl = uploadResponse.url;
+
+    // Parse tags if sent as JSON string or comma-separated list
+    let parsedTags = [];
+    if (tags) {
+      if (typeof tags === "string") {
+        if (tags.startsWith("[") && tags.endsWith("]")) {
+          try {
+            parsedTags = JSON.parse(tags);
+          } catch {
+            parsedTags = tags.split(",").map((t) => t.trim());
+          }
+        } else {
+          parsedTags = tags.split(",").map((t) => t.trim());
+        }
+      } else if (Array.isArray(tags)) {
+        parsedTags = tags;
+      }
+    }
+
+    const newProduct = await productService.createProduct({
+      title,
+      description,
+      price: Number(price),
+      category,
+      tags: parsedTags,
+      imageUrl,
+      stock: stock ? Number(stock) : 50,
+    });
+
+    res.status(201).json({
+      success: true,
+      message: "Product created successfully",
+      data: newProduct,
     });
   } catch (err) {
     next(err);

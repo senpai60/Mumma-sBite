@@ -17,6 +17,13 @@ export const getSingleProduct = async (productId) => {
   return product;
 };
 
+export const createProduct = async (productData) => {
+  const product = await Product.create(productData);
+  // Populate category information before returning
+  await product.populate("category");
+  return product;
+};
+
 export const injectProducts = async (productsArr) => {
   const inserted = await Product.insertMany(productsArr);
   return inserted;

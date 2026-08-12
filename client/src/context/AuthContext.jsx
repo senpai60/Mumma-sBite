@@ -30,7 +30,7 @@ const AuthProvider = ({ children }) => {
 
   // React / plain JS
   const googleLogin = () => {
-    return (window.location.href = `${SERVER_URL}/auth/google`);
+    return (window.location.href = `${SERVER_URL}/api/auth/google`);
   };
 
   const verifyUser = async () => {

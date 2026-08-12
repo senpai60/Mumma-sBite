@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductCard from "../../components/layout/ProductCard";
 import { getProducts } from "../../api/productsApi";
 
@@ -6,6 +7,15 @@ function TopRecipesSection() {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const scrollRef = useRef(null);
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      const scrollAmount = direction === "left" ? -300 : 300;
+      current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   useEffect(() => {
     const fetchRecipes = async () => {
@@ -72,18 +82,38 @@ function TopRecipesSection() {
             No recipes available.
           </div>
         ) : (
-          <div
-            className="flex w-full overflow-x-auto gap-4 pb-3
-                snap-x snap-mandatory scrollbar-none"
-          >
-            {recipes.map((item) => (
-              <div
-                key={item.id}
-                className="snap-center flex-shrink-0 w-[260px] sm:w-[280px]"
+          <div className="flex flex-col gap-4">
+            <div
+              ref={scrollRef}
+              className="flex w-full overflow-x-auto gap-4 pb-3
+                  snap-x snap-mandatory scrollbar-none"
+            >
+              {recipes.map((item) => (
+                <div
+                  key={item.id}
+                  className="snap-center flex-shrink-0 w-[260px] sm:w-[280px]"
+                >
+                  <ProductCard {...item} />
+                </div>
+              ))}
+            </div>
+            {/* Navigation Controls */}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => scroll("left")}
+                aria-label="Scroll left"
+                className="p-2 rounded-full bg-surface border border-border text-text hover:bg-primary hover:text-bg transition-colors focus:outline-none"
               >
-                <ProductCard {...item} />
-              </div>
-            ))}
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => scroll("right")}
+                aria-label="Scroll right"
+                className="p-2 rounded-full bg-surface border border-border text-text hover:bg-primary hover:text-bg transition-colors focus:outline-none"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
         )}
       </div>
