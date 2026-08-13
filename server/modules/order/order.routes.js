@@ -110,10 +110,15 @@ export const createOrderHandler = async (req, res) => {
     });
   } catch (error) {
     console.error("Razorpay order creation error:", error);
+    const razorpayDesc = error?.error?.description || error?.message || "Razorpay payment initialization failed";
+    const userFriendlyMsg =
+      razorpayDesc === "Authentication failed"
+        ? "Razorpay API Authentication failed. Please check RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET in Render Environment Variables."
+        : `Razorpay Order Error: ${razorpayDesc}`;
+
     return res.status(500).json({
       success: false,
-      message:
-        error?.error?.description || error?.message || "Internal Server Error",
+      message: userFriendlyMsg,
       error: error?.error || error?.message,
     });
   }
