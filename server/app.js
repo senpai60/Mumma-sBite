@@ -13,6 +13,7 @@ import passport from "passport";
 import "./config/passport.config.js";
 
 import { errorHandler } from "./middlewares/error.middleware.js";
+import { protect } from "./middlewares/auth.middleware.js";
 import { corsOptions } from "./config/corsOptions.config.js";
 
 import indexRouter from "./routes/index.js";
@@ -29,7 +30,6 @@ const app = express();
 
 app.use(cors(corsOptions));
 app.use(passport.initialize());
-app.use(errorHandler);
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -42,8 +42,8 @@ app.use("/api/users", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/products", productsRouter);
 app.use("/api/order", orderRouter);
-app.post("/api/create-order", createOrderHandler);
-app.post("/api/verify-payment", verifyPaymentHandler);
+app.post("/api/create-order", protect, createOrderHandler);
+app.post("/api/verify-payment", protect, verifyPaymentHandler);
 
 
 // Health check route for uptime monitors
@@ -55,5 +55,9 @@ app.get("/health", (req, res) => {
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
+// Must be last — Express only routes errors to middleware registered after the
+// routes that throw them.
+app.use(errorHandler);
 
 export default app;
