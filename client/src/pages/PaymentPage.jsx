@@ -7,19 +7,22 @@ import {
   MapPin,
   AlertCircle,
   Check,
+  CheckCircle,
 } from "lucide-react";
 import { useCartContext } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import LoaderPrimary from "../components/ui/LoaderPrimary";
-import axios from "axios";
+import { orderApi } from "../api/orderApi";
 
-const BASE = import.meta.env.VITE_SERVER_URI || (import.meta.env.PROD ? "" : "http://localhost:3000");
+const BASE =
+  import.meta.env.VITE_SERVER_URI ||
+  (import.meta.env.PROD ? "" : "http://localhost:3000");
 
 function PaymentPage() {
   const navigate = useNavigate();
-//   const location = useLocation();
   const { user } = useAuth();
-  const { cart, loading } = useCartContext();
+  const { cart, loading, clearCart } = useCartContext();
+
   const [formData, setFormData] = useState({
     fullName: user?.name || "",
     mobile: "",
@@ -28,8 +31,18 @@ function PaymentPage() {
     state: "",
     zipCode: "",
   });
+
+  const [otpState, setOtpState] = useState({
+    step: null, // null | "otp" | "verified"
+    otpCode: "",
+    otpError: "",
+    otpLoading: false,
+    mobileVerified: false,
+  });
+
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
     if (!cart || cart.total === 0) {
@@ -87,55 +100,158 @@ function PaymentPage() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const verifyPayment = async (response, orderId) => {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } =
+      response;
+    try {
+      const res = await orderApi.post("/verify", {
+        razorpayOrderId: razorpay_order_id,
+        paymentId: razorpay_payment_id,
+        signature: razorpay_signature,
+      });
+
+      if (res.data.isVerified) {
+        await clearCart();
+        navigate(`/orders/${orderId}`);
+      } else {
+        alert("Payment verification failed.");
+      }
+    } catch (err) {
+      console.error("Verification error:", err);
+      alert("Payment verification failed.");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!formData.mobile.trim()) {
+      setOtpState((prev) => ({
+        ...prev,
+        otpError: "Mobile number is required",
+      }));
+      return;
+    }
+
+    const digits = formData.mobile.replace(/\D/g, "");
+    if (digits.length !== 10) {
+      setOtpState((prev) => ({
+        ...prev,
+        otpError: "Enter a valid 10-digit mobile number",
+      }));
+      return;
+    }
+
+    setOtpState((prev) => ({
+      ...prev,
+      otpLoading: true,
+      otpError: "",
+    }));
+
+    try {
+      await user.sendOtp?.(digits);
+      setOtpState((prev) => ({
+        ...prev,
+        step: "otp",
+        otpCode: "",
+      }));
+    } catch (err) {
+      setOtpState((prev) => ({
+        ...prev,
+        otpError:
+          err?.response?.data?.message || "Failed to send OTP. Try again.",
+      }));
+    } finally {
+      setOtpState((prev) => ({
+        ...prev,
+        otpLoading: false,
+      }));
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (otpState.otpCode.length !== 6) {
+      setOtpState((prev) => ({
+        ...prev,
+        otpError: "Enter the 6-digit OTP",
+      }));
+      return;
+    }
+
+    setOtpState((prev) => ({
+      ...prev,
+      otpLoading: true,
+      otpError: "",
+    }));
+
+    try {
+      await user.verifyOtp?.(
+        formData.mobile.replace(/\D/g, ""),
+        otpState.otpCode,
+        formData.fullName
+      );
+      setOtpState((prev) => ({
+        ...prev,
+        step: "verified",
+        mobileVerified: true,
+      }));
+      setSuccessMessage("Mobile number verified successfully!");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (err) {
+      setOtpState((prev) => ({
+        ...prev,
+        otpError: err?.response?.data?.message || "Invalid OTP. Try again.",
+      }));
+    } finally {
+      setOtpState((prev) => ({
+        ...prev,
+        otpLoading: false,
+      }));
+    }
+  };
+
   const handleOrder = async () => {
     if (!validateForm()) {
       return;
     }
 
+    if (!otpState.mobileVerified) {
+      alert("Please verify your mobile number first");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const res = await axios.post(
-        `${BASE}/api/order/`,
-        {
-          cartId: cart?._id,
-          notes: formData,
-        },
-        { withCredentials: true },
-      );
+      const res = await orderApi.post("/", {
+        cartId: cart?._id,
+        deliveryDetails: formData,
+      });
 
-      const { order, key_id } = res.data;
-      const notes = order.notes || formData || {};
+      const { order, key_id, orderId } = res.data;
 
       const options = {
         key: key_id,
-        amount: order.amount, // Amount is in currency subunits.
+        amount: order.amount,
         currency: order.currency,
         name: "Mumma's Bite",
         description: "Food Order Payment",
         order_id: order.id,
-
         prefill: {
-          name: notes.fullName || user?.name || "",
+          name: formData.fullName,
           email: user?.email || "",
-          contact: notes.mobile || "",
+          contact: formData.mobile,
         },
         theme: {
-          color: "#F37254",
+          color: "#e07b67",
         },
-        handler: (response) => {
-          alert(`Payment Successful! Payment ID: ${response.razorpay_payment_id}`);
-        },
+        handler: (response) => verifyPayment(response, orderId),
       };
+
       const rzp = new window.Razorpay(options);
       rzp.open();
-
-      // Reset form and navigate
-      setTimeout(() => {
-        navigate("/");
-      }, 1000);
     } catch (error) {
       console.error("Order error:", error);
-      const errorMsg = error?.response?.data?.message || "An error occurred while placing your order. Please check Razorpay keys.";
+      const errorMsg =
+        error?.response?.data?.message ||
+        "An error occurred while placing your order.";
       alert(errorMsg);
     } finally {
       setIsSubmitting(false);
@@ -171,6 +287,14 @@ function PaymentPage() {
         <p className="text-text-light text-sm">
           Please provide your details to complete the delivery
         </p>
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-2 text-green-700 text-sm">
+            <CheckCircle className="h-4 w-4" />
+            {successMessage}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {/* Form Section */}
@@ -211,24 +335,78 @@ function PaymentPage() {
                   <label className="block text-sm font-medium text-text mb-2">
                     Mobile Number <span className="text-primary">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    name="mobile"
-                    value={formData.mobile}
-                    onChange={handleInputChange}
-                    placeholder="10-digit mobile number"
-                    maxLength="10"
-                    className={`w-full rounded-lg px-4 py-2.5 bg-bg border transition focus:outline-none focus:ring-1 ${
+                  <div
+                    className={`flex gap-2 rounded-lg bg-bg border transition focus-within:border-primary focus-within:ring-1 ${
                       errors.mobile
-                        ? "border-red-400 focus:ring-red-300"
-                        : "border-border focus:border-primary focus:ring-primary/60"
+                        ? "border-red-400 focus-within:ring-red-300"
+                        : "border-border focus-within:ring-primary/60"
                     }`}
-                  />
+                  >
+                    <input
+                      type="tel"
+                      name="mobile"
+                      value={formData.mobile}
+                      onChange={handleInputChange}
+                      placeholder="10-digit mobile number"
+                      maxLength="10"
+                      disabled={otpState.mobileVerified}
+                      className="flex-1 px-4 py-2.5 bg-transparent outline-none text-sm disabled:opacity-60"
+                    />
+                    {!otpState.mobileVerified && (
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={otpState.otpLoading || formData.mobile.length < 10}
+                        className="px-4 py-2.5 text-primary text-sm font-medium hover:opacity-80 disabled:opacity-50 transition"
+                      >
+                        {otpState.otpLoading ? "Sending..." : "Send OTP"}
+                      </button>
+                    )}
+                    {otpState.mobileVerified && (
+                      <div className="px-4 py-2.5 flex items-center gap-2 text-green-600 text-sm font-medium">
+                        <CheckCircle className="h-4 w-4" />
+                        Verified
+                      </div>
+                    )}
+                  </div>
                   {errors.mobile && (
                     <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                       <AlertCircle className="h-3 w-3" />
                       {errors.mobile}
                     </p>
+                  )}
+
+                  {/* OTP Input */}
+                  {otpState.step === "otp" && !otpState.mobileVerified && (
+                    <div className="mt-3 space-y-2">
+                      <input
+                        type="text"
+                        value={otpState.otpCode}
+                        onChange={(e) =>
+                          setOtpState((prev) => ({
+                            ...prev,
+                            otpCode: e.target.value.replace(/\D/g, "").slice(0, 6),
+                          }))
+                        }
+                        placeholder="Enter 6-digit OTP"
+                        maxLength="6"
+                        className="w-full rounded-lg px-4 py-2.5 bg-bg border border-border focus:border-primary focus:ring-1 focus:ring-primary/60 outline-none text-sm"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={otpState.otpLoading || otpState.otpCode.length < 6}
+                        className="w-full px-3 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 transition"
+                      >
+                        {otpState.otpLoading ? "Verifying..." : "Verify OTP"}
+                      </button>
+                      {otpState.otpError && (
+                        <p className="text-xs text-red-500 flex items-center gap-1">
+                          <AlertCircle className="h-3 w-3" />
+                          {otpState.otpError}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -379,7 +557,11 @@ function PaymentPage() {
 
               <button
                 onClick={handleOrder}
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  !otpState.mobileVerified ||
+                  Object.keys(errors).length > 0
+                }
                 className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-white text-sm font-medium px-4 py-3 hover:opacity-90 transition-opacity disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
@@ -396,7 +578,9 @@ function PaymentPage() {
               </button>
 
               <p className="mt-3 text-[0.7rem] text-text-light text-center">
-                Your order details will be confirmed on the next step
+                {!otpState.mobileVerified
+                  ? "Please verify your mobile number first"
+                  : "You will be redirected to payment gateway"}
               </p>
             </div>
           </div>

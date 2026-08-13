@@ -11,8 +11,8 @@ const ICON_SIZE = 16;
 const navLinksIconButtonData = [
   {
     Icon: History,
-    link: "/history",
-    label: "Order history",
+    link: "/orders",
+    label: "Orders",
   },
   {
     Icon: ShoppingCart,

@@ -117,7 +117,18 @@ export const removeFromCart = async (userId, productId) => {
 // Clear the entire cart
 export const clearCart = async (userId) => {
   const cart = await Cart.findOne({ user: userId });
-  if (!cart) throw new AppError("Cart not found", 404);
+  if (!cart) {
+    return {
+      user: userId,
+      products: [],
+      subtotal: 0,
+      gst: 0,
+      deliveryFee: 0,
+      total: 0,
+      grandTotal: 0,
+      totalItems: 0,
+    };
+  }
 
   cart.products = [];
   await cart.save();

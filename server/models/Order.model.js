@@ -87,6 +87,15 @@ const orderSchema = new mongoose.Schema(
       ref: "Cart",
     },
 
+    deliveryDetails: {
+      fullName: String,
+      mobile: String,
+      address: String,
+      city: String,
+      state: String,
+      zipCode: String,
+    },
+
     notes: {
       type: mongoose.Schema.Types.Mixed,
     },
