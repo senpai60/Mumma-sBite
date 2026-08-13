@@ -38,3 +38,20 @@ export const verifyPayment = async (data) => {
   const response = await orderApi.post("/verify", data);
   return response.data;
 };
+
+// Standalone create-order endpoint (/api/create-order)
+export const createRazorpayOrder = async (orderData) => {
+  const response = await axios.post(`${BASE}/api/create-order`, orderData, {
+    withCredentials: true,
+  });
+  return response.data;
+};
+
+// Standalone verify-payment endpoint (/api/verify-payment)
+export const verifyRazorpayPayment = async (paymentData) => {
+  const response = await axios.post(`${BASE}/api/verify-payment`, paymentData, {
+    withCredentials: true,
+  });
+  return response.data;
+};
+

@@ -220,20 +220,21 @@ function PaymentPage() {
 
     setIsSubmitting(true);
     try {
-      const res = await orderApi.post("/", {
+      const res = await orderApi.post("/create-order", {
         cartId: cart?._id,
         deliveryDetails: formData,
       });
 
-      const { order, key_id, orderId } = res.data;
+      const { order, key_id, orderId, order_id } = res.data;
+      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || key_id;
 
       const options = {
-        key: key_id,
-        amount: order.amount,
-        currency: order.currency,
+        key: razorpayKeyId,
+        amount: order?.amount || res.data.amount,
+        currency: order?.currency || res.data.currency || "INR",
         name: "Mumma's Bite",
         description: "Food Order Payment",
-        order_id: order.id,
+        order_id: order_id || order?.id,
         prefill: {
           name: formData.fullName,
           email: user?.email || "",
@@ -242,10 +243,21 @@ function PaymentPage() {
         theme: {
           color: "#e07b67",
         },
-        handler: (response) => verifyPayment(response, orderId),
+        handler: (response) => verifyPayment(response, orderId || order_id || order?.id),
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+            console.log("Razorpay checkout modal dismissed by user");
+          },
+        },
       };
 
       const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", function (response) {
+        console.error("Razorpay Payment Failed:", response.error);
+        setIsSubmitting(false);
+        alert(`Payment Failed: ${response.error.description || "Transaction failed"}`);
+      });
       rzp.open();
     } catch (error) {
       console.error("Order error:", error);
@@ -253,7 +265,6 @@ function PaymentPage() {
         error?.response?.data?.message ||
         "An error occurred while placing your order.";
       alert(errorMsg);
-    } finally {
       setIsSubmitting(false);
     }
   };
