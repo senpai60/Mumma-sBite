@@ -3,7 +3,7 @@ import crypto from "crypto";
 import Cart from "../../models/Cart.model.js";
 import { razorpay } from "../../config/razorpay.js";
 import { ENV_CONFIG } from "../../config/env.config.js";
-import { protect } from "../../middlewares/auth.middleware.js";
+import { protect, optionalProtect } from "../../middlewares/auth.middleware.js";
 import Order from "../../models/Order.model.js";
 
 const orderRouter = Router();
@@ -26,7 +26,7 @@ export const createOrderHandler = async (req, res) => {
       orderAmountInPaise = Math.round(numericAmount);
     } else if (cartId) {
       const cart = await Cart.findById(cartId).populate("products.product");
-      if (!cart || cart.products.length === 0) {
+      if (!cart || !cart.products || cart.products.length === 0) {
         return res.status(400).json({
           success: false,
           message: "Cart is empty",
@@ -51,38 +51,49 @@ export const createOrderHandler = async (req, res) => {
       amount: orderAmountInPaise,
       currency,
       receipt: receipt || `order_${Date.now()}`,
-      notes: deliveryDetails || {},
+      notes: {
+        fullName: String(deliveryDetails?.fullName || ""),
+        mobile: String(deliveryDetails?.mobile || ""),
+        address: String(deliveryDetails?.address || ""),
+        city: String(deliveryDetails?.city || ""),
+        state: String(deliveryDetails?.state || ""),
+        zipCode: String(deliveryDetails?.zipCode || ""),
+      },
     };
 
     const razorpayOrder = await razorpay.orders.create(options);
-    console.log("Razorpay Order Created:", razorpayOrder);
+    console.log("Razorpay Order Created successfully:", razorpayOrder.id);
 
     let newOrder = null;
     if (userId && cartId) {
       const cart = await Cart.findById(cartId).populate("products.product");
-      const orderProducts = cart?.products?.map((item) => {
-        const prod = item.product;
-        return {
-          productId: prod?._id || prod,
-          name: prod?.title || prod?.name || "Product",
-          price: prod?.price || 0,
-          quantity: item.quantity,
-          image: prod?.imageUrl || prod?.image || "",
-        };
-      }) || [];
+      const orderProducts = cart?.products
+        ?.filter((item) => item && item.product)
+        ?.map((item) => {
+          const prod = item.product;
+          return {
+            productId: prod._id || prod,
+            name: prod.title || prod.name || "Product",
+            price: Number(prod.price) || 0,
+            quantity: item.quantity || 1,
+            image: prod.imageUrl || prod.image || "",
+          };
+        }) || [];
 
-      newOrder = await Order.create({
-        userId: userId,
-        razorpayOrderId: razorpayOrder.id,
-        status: "PLACED",
-        paymentStatus: "PENDING",
-        products: orderProducts,
-        amount: orderAmountInPaise / 100,
-        currency,
-        cartId: cartId,
-        deliveryDetails: deliveryDetails,
-        notes: deliveryDetails,
-      });
+      if (orderProducts.length > 0) {
+        newOrder = await Order.create({
+          userId: userId,
+          razorpayOrderId: razorpayOrder.id,
+          status: "PLACED",
+          paymentStatus: "PENDING",
+          products: orderProducts,
+          amount: orderAmountInPaise / 100,
+          currency,
+          cartId: cartId,
+          deliveryDetails: deliveryDetails,
+          notes: deliveryDetails,
+        });
+      }
     }
 
     const keyId = ENV_CONFIG.RAZORPAY_KEY_ID || ENV_CONFIG.RAZORPAY_API_KEY;
@@ -103,7 +114,7 @@ export const createOrderHandler = async (req, res) => {
       success: false,
       message:
         error?.error?.description || error?.message || "Internal Server Error",
-      error,
+      error: error?.error || error?.message,
     });
   }
 };
@@ -170,10 +181,10 @@ export const verifyPaymentHandler = async (req, res) => {
   }
 };
 
-orderRouter.post("/", protect, createOrderHandler);
-orderRouter.post("/create-order", createOrderHandler);
-orderRouter.post("/verify", verifyPaymentHandler);
-orderRouter.post("/verify-payment", verifyPaymentHandler);
+orderRouter.post("/", optionalProtect, createOrderHandler);
+orderRouter.post("/create-order", optionalProtect, createOrderHandler);
+orderRouter.post("/verify", optionalProtect, verifyPaymentHandler);
+orderRouter.post("/verify-payment", optionalProtect, verifyPaymentHandler);
 
 // Get all orders for the user
 orderRouter.get("/user", protect, async (req, res) => {
